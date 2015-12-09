@@ -21,11 +21,12 @@ def comp():
     dict_1=Counter(txt_1.split())
     dict_2=Counter(txt_2.split())
 
-    for re_filter in compiled_re_filters:
-        for word in list(dict_1):
+    for word in list(dict_1):
+        for re_filter in compiled_re_filters:
             if re_filter.match(word):
                 del dict_1[word]
-        for word in list(dict_2):
+    for word in list(dict_2):
+        for re_filter in compiled_re_filters:
             if re_filter.match(word):
                 del dict_2[word]
             
@@ -34,7 +35,6 @@ def comp():
             
     for word in list(dict_1):
         dict_1[word.lower()]=dict_1.pop(word)
-   
 
     for word in common_words:
         del dict_1[word]
@@ -52,7 +52,7 @@ def comp():
     print(sp, norm_1, norm_2)
     print(sp/(norm_1*norm_2))
 
-for i in range(30):
+for i in range(100):
     comp()
 
 # Note:
