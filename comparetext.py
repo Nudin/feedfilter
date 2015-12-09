@@ -29,21 +29,16 @@ def comp():
         for re_filter in compiled_re_filters:
             if re_filter.match(word):
                 del dict_2[word]
-            
-    for word in list(dict_2):
-        dict_2[word.lower()]=dict_2.pop(word)
-            
-    for word in list(dict_1):
-        dict_1[word.lower()]=dict_1.pop(word)
+
+    dict_1=dict((k.lower(), v) for k,v in dict_1.items())
+    dict_2=dict((k.lower(), v) for k,v in dict_2.items())
 
     for word in common_words:
-        del dict_1[word]
-        del dict_2[word]
-    
-    for key in dict_1:
-        if dict_1[key] !=0 and dict_2.get(key, 0) != 0:
-            1+1
-            #print(key,dict_1[key],dict_2.get(key, 0)) 
+        try:
+           del dict_1[word]
+           del dict_2[word]
+        except KeyError:
+            continue
     
     norm_1=math.sqrt(sum(dict_1[key]*dict_1[key]*len(key) for key in dict_1))
     norm_2=math.sqrt(sum(dict_2[key]*dict_2[key]*len(key) for key in dict_2))
