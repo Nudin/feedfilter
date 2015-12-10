@@ -2,7 +2,6 @@
 import math
 from collections import Counter
 import re
-import sys
 
 common_words = open('de-commonwordlist.txt', 'rU').read().split()
 re_filters = ['\d+$', '\w$', '[A-Z][a-z]{1,2}$' ]
@@ -30,9 +29,7 @@ def analyse(txt):
             continue
     return wordlist
 
-def comp():
-    txt_1=open(sys.argv[1], 'rU').read()
-    txt_2=open(sys.argv[2], 'rU').read()
+def comp(txt_1, txt_2):
     dict_1=analyse(txt_1)
     dict_2=analyse(txt_2)
 
@@ -40,12 +37,5 @@ def comp():
     norm_2=math.sqrt(sum(dict_2[key]*dict_2[key]*len(key) for key in dict_2))
     
     sp=sum(dict_1[key]*dict_2.get(key, 0)*len(key) for key in dict_1)
-    print(sp, norm_1, norm_2)
-    print(sp/(norm_1*norm_2))
-    
-
-for i in range(100):
-    comp()
-
-# Note:
-# Div through zero if one txt is empty
+    #print(sp, norm_1, norm_2)
+    print(sp/(norm_1*norm_2))   # ToDo: avoid division by zero
