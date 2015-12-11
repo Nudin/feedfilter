@@ -29,13 +29,15 @@ def analyse(txt):
             continue
     return wordlist
 
-def comp(txt_1, txt_2):
-    dict_1=analyse(txt_1)
-    dict_2=analyse(txt_2)
-
+def comp(dict_1, dict_2):
     norm_1=math.sqrt(sum(dict_1[key]*dict_1[key]*len(key) for key in dict_1))
     norm_2=math.sqrt(sum(dict_2[key]*dict_2[key]*len(key) for key in dict_2))
     
     sp=sum(dict_1[key]*dict_2.get(key, 0)*len(key) for key in dict_1)
     #print(sp, norm_1, norm_2)
-    print(sp/(norm_1*norm_2))   # ToDo: avoid division by zero
+    return sp/(norm_1*norm_2)   # ToDo: avoid division by zero
+
+def comp_txt(txt_1, txt_2):
+    dict_1=analyse(txt_1)
+    dict_2=analyse(txt_2)
+    return comp(dict_1, dict_2)

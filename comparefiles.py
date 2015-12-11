@@ -4,4 +4,4 @@ import sys
 
 txt_1=open(sys.argv[1], 'rU').read()
 txt_2=open(sys.argv[2], 'rU').read()
-comp.comp(txt_1, txt_2)
+print(comp.comp_txt(txt_1, txt_2))
