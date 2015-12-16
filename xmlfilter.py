@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as etree
+import urllib.request
 import sys
 import comparetext
 
@@ -15,8 +16,13 @@ try:
 except IOError:
        print('error opening file')
 
+if sys.argv[1][0:4] == "http":
+    feedfile = urllib.request.urlopen(sys.argv[1])
+else:
+    feedfile = sys.argv[1]
+
 # Load feed, detect format and get root
-tree = etree.parse(sys.argv[1])
+tree = etree.parse(feedfile)
 root = tree.getroot()
 if root.tag == '{http://www.w3.org/2005/Atom}feed':
     spec='http://www.w3.org/2005/Atom'
