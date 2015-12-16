@@ -23,12 +23,14 @@ if root.tag == '{http://www.w3.org/2005/Atom}feed':
     channel_spec=None
     item_spec='{' + spec + '}entry'
     title_spec='{' + spec + '}title'
+    link_spec='{' + spec + '}link'
     description_spec='{' + spec + '}summary'
 elif root.tag == 'rss':
     spec=None
     channel='channel'
     item_spec='item'
     title_spec='title'
+    link_spec='link'
     description_spec='description'
     root=root.find(channel)
 else:
@@ -37,20 +39,22 @@ else:
 
 wordlists=[]
 
-for child in root.findall(item_spec): 
+items = root.findall(item_spec)
+for child in items: 
     title = child.find(title_spec).text
     summary = child.find(description_spec).text
+    link = child.find(link_spec).attrib['href'] # Todo: fix for RSS (text)
 
     lvl=0
 
     wordlist=comparetext.analyse(title + " " + summary)
-    for dic in wordlists:
+    for index, dic in enumerate(wordlists):
         t=comparetext.comp(wordlist, dic)
-        if t>lvl:
-            lvl=t
+        if t>0.5:
+            items[index].find(description_spec).text += "<br>Siehe auch: <a href=\"" + link + "\">"+title+"</a>"
+            root.remove(child)
+            continue
     wordlists.append(wordlist)
-
-    lvl *= 1.5 * treshhold
     
     for word in blackwords:
         if title.find(word) != -1:
@@ -63,9 +67,14 @@ for child in root.findall(item_spec):
         root.remove(child)
     print(lvl, title)
 
+for item in root.findall(item_spec):
+    title = item.find(description_spec).text
+    #print(title)
+
+
 etree.register_namespace('',spec)
 # Write output to console
 #tree.write(1, encoding="UTF-8", xml_declaration=True)
 # Write output to file
-#tree.write('output.xml', encoding="UTF-8", xml_declaration=True)
+tree.write('output.xml', encoding="UTF-8", xml_declaration=True)
 
