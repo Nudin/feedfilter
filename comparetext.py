@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import math
+import os
 from collections import Counter
 import re
 
-common_words = open('de-commonwordlist.txt', 'rU').read().split()
+dir = os.path.dirname(__file__)
+common_words = open(os.path.join(dir,'de-commonwordlist.txt'), 'rU').read().split()
 re_filters = ['\d+$', '\w$', '[A-Z][a-z]{1,2}$' ]
     
 specialchar_filter = re.compile('[^\w\s]+', re.UNICODE)

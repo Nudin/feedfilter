@@ -1,7 +1,12 @@
+#!/usr/bin/env python3
 import urllib.request
 import sys
+import os
 import comparetext
 from feed import Feed
+
+def log(*objs):
+    print(*objs, file=sys.stderr)
 
 treshhold = 1
 title_scale = 2
@@ -9,7 +14,8 @@ title_scale = 2
 # read backwordlist
 blackwords = {}
 try:
-    with open('blackwordlist.txt', 'rU') as infile:
+    dir = os.path.dirname(__file__)
+    with open(os.path.join(dir,'./blackwordlist.txt'), 'rU') as infile:
         for line in infile:
         	tmp=line.strip().split('\t')
         	blackwords[tmp[0]]=int(tmp[1])
@@ -38,7 +44,7 @@ for child in feed.get_items():
         t=comparetext.comp(wordlist, dic)
         if t>0.5:
             feed.append_description(index, "<br>Siehe auch: <a href=\"" + link + "\">"+title+"</a>")
-            print("removing dupplicate!")
+            log("removing dupplicate!")
             feed.remove_item(child)
             continue
     wordlists.append(wordlist)
@@ -50,9 +56,9 @@ for child in feed.get_items():
         if summary.find(word) != -1:
         	lvl += blackwords[word]
     if lvl > treshhold:
-        print("removing item!")
+        log("removing item!")
         feed.remove_item(child)
-    print(lvl, title)
+    log(lvl, title)
 
 
 # Write output to console
