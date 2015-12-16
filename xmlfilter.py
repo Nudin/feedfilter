@@ -49,30 +49,48 @@ class Feed():
     def get_title(self, indexorchild):
         child = self.__index2child(indexorchild)
         if self.format == 'atom':
-            return child.find('{http://www.w3.org/2005/Atom}title').text    # todo: check for null
+            title = child.find('{http://www.w3.org/2005/Atom}title')
+            if title != None:
+                return title.text
         elif self.format == 'rss':
-            return child.find('title').text
+            title = child.find('title')
+            if title != None:
+                return title.text
+        return ""
 
     def get_description(self, indexorchild):
         child = self.__index2child(indexorchild)
         if self.format == 'atom':
-            return child.find('{http://www.w3.org/2005/Atom}summary').text  # todo: check for null
+            desc = child.find('{http://www.w3.org/2005/Atom}summary')
+            if desc != None:
+                return desc.text 
         elif self.format == 'rss':
-            return child.find('description').text
+            desc = child.find('description')
+            if desc != None:
+                return desc.text
+        return ""
 
     def append_description(self, indexorchild, text):
         child = self.__index2child(indexorchild)
         if self.format == 'atom':
-            child.find('{http://www.w3.org/2005/Atom}summary').text += text # todo: check for null
+            desc = child.find('{http://www.w3.org/2005/Atom}summary')
+            if desc != None:
+                desc.text += text   # todo: create if not existing
         elif self.format == 'rss':
-            child.find('description').text += text
+            desc = child.find('description')
+            if desc != None:
+                desc.text += text   # todo: create if not existing
 
     def get_link(self, indexorchild):
         child = self.__index2child(indexorchild)
         if self.format == 'atom':
-            return child.find('{http://www.w3.org/2005/Atom}link').attrib['href']   # todo: check for null
+            link = child.find('{http://www.w3.org/2005/Atom}link')
+            if link != None:
+                return link.attrib['href']
         elif self.format == 'rss':
-            return child.find('link').text
+            link =  child.find('link')
+            if link != None:
+                return link.text
 
     def remove_item(self, indexorchild):
         child = self.__index2child(indexorchild)
