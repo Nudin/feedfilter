@@ -21,35 +21,83 @@ if sys.argv[1][0:4] == "http":
 else:
     feedfile = sys.argv[1]
 
-# Load feed, detect format and get root
-tree = etree.parse(feedfile)
-root = tree.getroot()
-if root.tag == '{http://www.w3.org/2005/Atom}feed':
-    spec='http://www.w3.org/2005/Atom'
-    channel_spec=None
-    item_spec='{' + spec + '}entry'
-    title_spec='{' + spec + '}title'
-    link_spec='{' + spec + '}link'
-    description_spec='{' + spec + '}summary'
-elif root.tag == 'rss':
-    spec=None
-    channel='channel'
-    item_spec='item'
-    title_spec='title'
-    link_spec='link'
-    description_spec='description'
-    root=root.find(channel)
-else:
-    print("Unknown feedformat!")
-    exit
+
+class Feed():
+    def __init__(self, feedfile):
+        self.tree = etree.parse(feedfile)
+        self.root = self.tree.getroot()
+        if self.root.tag == '{http://www.w3.org/2005/Atom}feed':
+            self.format = 'atom'
+        elif self.root.tag == 'rss':
+            self.format = 'rss'
+        else:
+            print("Unknown feedformat!")
+            exit
+       
+    def __index2child(self, indexorchild):
+        if type(indexorchild) is int:
+            return self.get_items()[indexorchild]
+        else:
+            return indexorchild
+
+    def get_items(self):
+        if self.format == 'atom':
+            return self.root.findall('{http://www.w3.org/2005/Atom}entry')
+        elif self.format == 'rss':
+            return self.root.find('channel').findall('item')
+
+    def get_title(self, indexorchild):
+        child = self.__index2child(indexorchild)
+        if self.format == 'atom':
+            return child.find('{http://www.w3.org/2005/Atom}title').text    # todo: check for null
+        elif self.format == 'rss':
+            return child.find('title').text
+
+    def get_description(self, indexorchild):
+        child = self.__index2child(indexorchild)
+        if self.format == 'atom':
+            return child.find('{http://www.w3.org/2005/Atom}summary').text  # todo: check for null
+        elif self.format == 'rss':
+            return child.find('description').text
+
+    def append_description(self, indexorchild, text):
+        child = self.__index2child(indexorchild)
+        if self.format == 'atom':
+            child.find('{http://www.w3.org/2005/Atom}summary').text += text # todo: check for null
+        elif self.format == 'rss':
+            child.find('description').text += text
+
+    def get_link(self, indexorchild):
+        child = self.__index2child(indexorchild)
+        if self.format == 'atom':
+            return child.find('{http://www.w3.org/2005/Atom}link').attrib['href']   # todo: check for null
+        elif self.format == 'rss':
+            return child.find('link').text
+
+    def remove_item(self, indexorchild):
+        child = self.__index2child(indexorchild)
+        if self.format == 'atom':
+            self.root.remove(child)
+        elif self.format == 'rss':
+            self.root.find('channel').remove(child)
+
+    def write(self, filename):
+        if self.format == 'atom':
+           etree.register_namespace('', 'http://www.w3.org/2005/Atom')
+        self.tree.write(filename, encoding="UTF-8", xml_declaration=True)
+
+    def print(self):
+        self.write(1)
+
+
 
 wordlists=[]
 
-items = root.findall(item_spec)
-for child in items: 
-    title = child.find(title_spec).text
-    summary = child.find(description_spec).text # Todo: test for null
-    link = child.find(link_spec).attrib['href'] # Todo: fix for RSS (text)
+feed = Feed(feedfile)
+for child in feed.get_items(): 
+    title = feed.get_title(child)
+    summary = feed.get_description(child)
+    link = feed.get_link(child)
     # Todo: use content if available
 
     lvl=0
@@ -58,8 +106,9 @@ for child in items:
     for index, dic in enumerate(wordlists):
         t=comparetext.comp(wordlist, dic)
         if t>0.5:
-            items[index].find(description_spec).text += "<br>Siehe auch: <a href=\"" + link + "\">"+title+"</a>"
-            root.remove(child)
+            feed.append_description(index, "<br>Siehe auch: <a href=\"" + link + "\">"+title+"</a>")
+            print("removing dupplicate!")
+            feed.remove_item(child)
             continue
     wordlists.append(wordlist)
     
@@ -71,17 +120,12 @@ for child in items:
         	lvl += blackwords[word]
     if lvl > treshhold:
         print("removing item!")
-        root.remove(child)
+        feed.remove_item(child)
     print(lvl, title)
 
-for item in root.findall(item_spec):
-    title = item.find(description_spec).text
-    #print(title)
 
-
-etree.register_namespace('',spec)
 # Write output to console
-#tree.write(1, encoding="UTF-8", xml_declaration=True)
+#feed.print()
 # Write output to file
-tree.write('output.xml', encoding="UTF-8", xml_declaration=True)
+feed.write('output.xml')
 
