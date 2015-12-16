@@ -48,8 +48,9 @@ wordlists=[]
 items = root.findall(item_spec)
 for child in items: 
     title = child.find(title_spec).text
-    summary = child.find(description_spec).text
+    summary = child.find(description_spec).text # Todo: test for null
     link = child.find(link_spec).attrib['href'] # Todo: fix for RSS (text)
+    # Todo: use content if available
 
     lvl=0
 
