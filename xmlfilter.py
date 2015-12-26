@@ -24,8 +24,7 @@ def warn(*objs):
 def read_filterlist(filename):
     blackwords = {}
     try:
-        dir = os.path.dirname(__file__)
-        with open(os.path.join(dir, filename), 'rU') as infile:
+        with open(os.path.join(confdir, filename), 'rU') as infile:
             for line in infile:
                 tmp=line.strip().split('\t')
                 blackwords[tmp[0]]=int(tmp[1])
@@ -34,8 +33,10 @@ def read_filterlist(filename):
     return blackwords
 
 # read in config
+confdir = os.getenv('FEED_FILTER_CONF', 
+        os.path.join(os.getenv('HOME'), ".feedfilter"))
 config = configparser.ConfigParser()
-config.read('feedfilter.conf')
+config.read(os.path.join(confdir, 'feedfilter.conf'))
 treshhold = int(config['DEFAULT'].get('treshhold', 1))
 title_scale = int(config['DEFAULT'].get('title_scale', 2))
 silent = config['DEFAULT'].get('silent', "True") == 'True'
