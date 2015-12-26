@@ -8,11 +8,15 @@ import configparser
 
 
 def log(*objs):
+    if silent:
+        return
     print("\033[0m", end="", flush=True)
     print(*objs, file=sys.stderr)
     print("\033[0m", end="", flush=True)
 
 def warn(*objs):
+    if silent:
+        return
     print("\033[31m", end="", flush=True)
     print(*objs, file=sys.stderr)
     print("\033[0m", end="", flush=True)
@@ -34,6 +38,8 @@ config = configparser.ConfigParser()
 config.read('feedfilter.conf')
 treshhold = int(config['DEFAULT'].get('treshhold', 1))
 title_scale = int(config['DEFAULT'].get('title_scale', 2))
+silent = config['DEFAULT'].get('silent', "True") == 'True'
+outputfile = config['DEFAULT'].get('outputfile', None)
 
 # parse arguments and read feed from file/url
 if len(sys.argv) != 2:
@@ -86,9 +92,10 @@ for child in feed.get_items():
         feed.remove_item(child)
     log(lvl, title)
 
-
-# Write output to console
-#feed.print()
-# Write output to file
-feed.write('output.xml')
+if outputfile == None:
+    # Write output to console
+    feed.print()
+else:
+    # Write output to file
+    feed.write(outputfile)
 
