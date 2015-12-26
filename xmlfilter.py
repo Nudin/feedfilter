@@ -19,6 +19,18 @@ def warn(*objs):
 treshhold = 1
 title_scale = 2
 
+
+# Read file
+if len(sys.argv) != 2:
+    warn("no file/url given")
+    exit(-1)
+if sys.argv[1][0:4] == "http":
+    feedfile = urllib.request.urlopen(sys.argv[1])
+    sitename= sys.argv[1].split('.')
+else:
+    feedfile = sys.argv[1]
+
+
 # read backwordlist
 blackwords = {}
 try:
@@ -29,11 +41,6 @@ try:
         	blackwords[tmp[0]]=int(tmp[1])
 except IOError:
        print('error opening file')
-
-if sys.argv[1][0:4] == "http":
-    feedfile = urllib.request.urlopen(sys.argv[1])
-else:
-    feedfile = sys.argv[1]
 
 
 wordlists=[]
