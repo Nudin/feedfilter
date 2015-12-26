@@ -43,11 +43,15 @@ for child in feed.get_items():
     for index, dic in enumerate(wordlists):
         t=comparetext.comp(wordlist, dic)
         if t>0.5:
-            feed.append_description(index, "<br>Siehe auch: <a href=\"" + link + "\">"+title+"</a>")
-            log("removing dupplicate!")
+            feed.append_description(index, "<br><br>Siehe auch: <a href=\"" + link + "\">"+title+"</a>")
+            log("removing dupplicate: ", title)
             feed.remove_item(child)
+            lvl=treshhold+1
             continue
-    wordlists.append(wordlist)
+    if lvl > treshhold:
+        continue
+    else:
+        wordlists.append(wordlist)
     
     for word in blackwords:
         if title.find(word) != -1:
