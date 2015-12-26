@@ -48,16 +48,42 @@ class Feed():
                 return desc.text
         return ""
 
-    def append_description(self, indexorchild, text):
+    def append_description(self, indexorchild, text):   # todo: create if not existing
         child = self.__index2child(indexorchild)
         if self.format == 'atom':
             desc = child.find('{http://www.w3.org/2005/Atom}summary')
             if desc != None:
-                desc.text += text   # todo: create if not existing
+                desc.text += text
         elif self.format == 'rss':
             desc = child.find('description')
             if desc != None:
-                desc.text += text   # todo: create if not existing
+                desc.text += text
+        # If item has a content-tag, we also appand to that
+        if self.get_content(indexorchild):
+            self.append_content(indexorchild, text)
+
+    def get_content(self, indexorchild):
+        child = self.__index2child(indexorchild)
+        if self.format == 'atom':
+            cont = child.find('{http://www.w3.org/2005/Atom}content')
+            if cont != None:
+                return  "".join(content.itertext())
+        elif self.format == 'rss':
+            cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
+            if cont != None:
+                return cont.text
+        return ""
+
+    def append_content(self, indexorchild, text):   # todo: create if not existing
+        child = self.__index2child(indexorchild)
+        if self.format == 'atom':
+            cont = child.find('{http://www.w3.org/2005/Atom}content')
+            if cont != None:
+                cont = etree.fromstring(etree.tostring(cont) + text)
+        elif self.format == 'rss':
+            cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
+            if cont != None:
+                cont.text += text
 
     def get_link(self, indexorchild):
         child = self.__index2child(indexorchild)
