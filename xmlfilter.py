@@ -16,31 +16,36 @@ def warn(*objs):
     print(*objs, file=sys.stderr)
     print("\033[0m", end="", flush=True)
 
+def read_filterlist(filename):
+    blackwords = {}
+    try:
+        dir = os.path.dirname(__file__)
+        with open(os.path.join(dir, filename), 'rU') as infile:
+            for line in infile:
+                tmp=line.strip().split('\t')
+                blackwords[tmp[0]]=int(tmp[1])
+    except IOError:
+        warn('error opening file:', filename)
+    return blackwords
+
+
 treshhold = 1
 title_scale = 2
 
 
-# Read file
+# parse arguments and read feed from file/url
 if len(sys.argv) != 2:
     warn("no file/url given")
     exit(-1)
 if sys.argv[1][0:4] == "http":
     feedfile = urllib.request.urlopen(sys.argv[1])
-    sitename= sys.argv[1].split('.')
+    sitename= sys.argv[1].split('.')[1]
 else:
     feedfile = sys.argv[1]
 
-
 # read backwordlist
-blackwords = {}
-try:
-    dir = os.path.dirname(__file__)
-    with open(os.path.join(dir,'./blackwordlist.txt'), 'rU') as infile:
-        for line in infile:
-        	tmp=line.strip().split('\t')
-        	blackwords[tmp[0]]=int(tmp[1])
-except IOError:
-       print('error opening file')
+blackwords = read_filterlist('./blackwordlist.txt')
+blackwords = read_filterlist(sitename)
 
 
 wordlists=[]
@@ -67,13 +72,13 @@ for child in feed.get_items():
         continue
     else:
         wordlists.append(wordlist)
-    
+
     for word in blackwords:
         if title.find(word) != -1:
-        	lvl += title_scale*blackwords[word]
+            lvl += title_scale*blackwords[word]
     for word in blackwords:
         if summary.find(word) != -1:
-        	lvl += blackwords[word]
+            lvl += blackwords[word]
     if lvl > treshhold:
         warn("removing item!")
         feed.remove_item(child)
