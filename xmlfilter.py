@@ -5,8 +5,16 @@ import os
 import comparetext
 from feed import Feed
 
+
 def log(*objs):
+    print("\033[0m", end="", flush=True)
     print(*objs, file=sys.stderr)
+    print("\033[0m", end="", flush=True)
+
+def warn(*objs):
+    print("\033[31m", end="", flush=True)
+    print(*objs, file=sys.stderr)
+    print("\033[0m", end="", flush=True)
 
 treshhold = 1
 title_scale = 2
@@ -34,17 +42,17 @@ feed = Feed(feedfile)
 for child in feed.get_items(): 
     title = feed.get_title(child)
     summary = feed.get_description(child)
+    content = feed.get_content(child)
     link = feed.get_link(child)
-    # Todo: use content if available
 
     lvl=0
 
-    wordlist=comparetext.analyse(title + " " + summary)
+    wordlist=comparetext.analyse(title + " " + summary + " " + content )
     for index, dic in enumerate(wordlists):
         t=comparetext.comp(wordlist, dic)
         if t>0.5:
             feed.append_description(index, "<br><br>Siehe auch: <a href=\"" + link + "\">"+title+"</a>")
-            log("removing dupplicate: ", title)
+            warn("removing dupplicate: ", title)
             feed.remove_item(child)
             lvl=treshhold+1
             continue
@@ -60,7 +68,7 @@ for child in feed.get_items():
         if summary.find(word) != -1:
         	lvl += blackwords[word]
     if lvl > treshhold:
-        log("removing item!")
+        warn("removing item!")
         feed.remove_item(child)
     log(lvl, title)
 
