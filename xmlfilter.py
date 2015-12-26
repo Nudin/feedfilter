@@ -4,6 +4,7 @@ import sys
 import os
 import comparetext
 from feed import Feed
+import configparser
 
 
 def log(*objs):
@@ -28,10 +29,11 @@ def read_filterlist(filename):
         warn('error opening file:', filename)
     return blackwords
 
-
-treshhold = 1
-title_scale = 2
-
+# read in config
+config = configparser.ConfigParser()
+config.read('feedfilter.conf')
+treshhold = int(config['DEFAULT'].get('treshhold', 1))
+title_scale = int(config['DEFAULT'].get('title_scale', 2))
 
 # parse arguments and read feed from file/url
 if len(sys.argv) != 2:
