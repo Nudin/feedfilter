@@ -26,8 +26,15 @@ def read_filterlist(filename):
     try:
         with open(os.path.join(confdir, filename), 'rU') as infile:
             for line in infile:
+                if line[0] == "#":
+                    continue
                 tmp=line.strip().split('\t')
-                blackwords[tmp[0]]=int(tmp[1])
+                try:
+                    blackwords[tmp[0]]=float(tmp[1])
+                except:
+                    warn("Cannot parse line in", filename, ":")
+                    warn(line)
+                    continue
     except IOError:
         warn('error opening file:', filename)
     return blackwords
