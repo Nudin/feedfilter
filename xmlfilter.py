@@ -44,9 +44,9 @@ confdir = os.getenv('FEED_FILTER_CONF',
         os.path.join(os.getenv('HOME'), ".feedfilter"))
 config = configparser.ConfigParser()
 config.read(os.path.join(confdir, 'feedfilter.conf'))
-treshhold = int(config['DEFAULT'].get('treshhold', 1))
+treshhold = float(config['DEFAULT'].get('treshhold', 1))
 cmp_treshhold = float(config['DEFAULT'].get('cmp_treshhold', 0.5))
-title_scale = int(config['DEFAULT'].get('title_scale', 2))
+title_scale = float(config['DEFAULT'].get('title_scale', 2))
 silent = config['DEFAULT'].get('silent', "True") == 'True'
 outputfile = config['DEFAULT'].get('outputfile', None)
 
