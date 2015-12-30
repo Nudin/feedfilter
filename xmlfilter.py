@@ -38,6 +38,7 @@ confdir = os.getenv('FEED_FILTER_CONF',
 config = configparser.ConfigParser()
 config.read(os.path.join(confdir, 'feedfilter.conf'))
 treshhold = int(config['DEFAULT'].get('treshhold', 1))
+cmp_treshhold = float(config['DEFAULT'].get('cmp_treshhold', 0.5))
 title_scale = int(config['DEFAULT'].get('title_scale', 2))
 silent = config['DEFAULT'].get('silent', "True") == 'True'
 outputfile = config['DEFAULT'].get('outputfile', None)
@@ -71,7 +72,7 @@ for child in feed.get_items():
     wordlist=comparetext.analyse(title + " " + summary + " " + content )
     for index, dic in enumerate(wordlists):
         t=comparetext.comp(wordlist, dic)
-        if t>0.5:
+        if t>cmp_treshhold:
             feed.append_description(index, "<br><br>Siehe auch: <a href=\"" + link + "\">"+title+"</a>")
             warn("removing dupplicate: ", title)
             feed.remove_item(child)
