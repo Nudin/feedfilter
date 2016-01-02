@@ -62,7 +62,8 @@ else:
 
 # read backwordlist
 blackwords = read_filterlist('./blackwordlist.txt')
-blackwords = read_filterlist(sitename)
+if 'sitename' in locals():
+    blackwords = read_filterlist(sitename)
 
 
 wordlists=[]
@@ -82,10 +83,10 @@ for child in feed.get_items():
         if t>cmp_treshhold:
             feed.append_description(index, "<br><br>Siehe auch: <a href=\"" + link + "\">"+title+"</a>")
             warn("removing dupplicate: ", title)
-            feed.remove_item(child)
             lvl=treshhold+1
             continue
     if lvl > treshhold:
+        feed.remove_item(child)
         continue
     else:
         wordlists.append(wordlist)
