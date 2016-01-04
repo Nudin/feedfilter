@@ -63,7 +63,7 @@ else:
 # read backwordlist
 blackwords = read_filterlist('./blackwordlist.txt')
 if 'sitename' in locals():
-    blackwords = read_filterlist(sitename)
+    blackwords.update(read_filterlist(sitename))
 
 
 wordlists=[]
