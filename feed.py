@@ -12,11 +12,15 @@ class Feed():
             print("Unknown feedformat!")
             exit
        
-    def __index2child(self, indexorchild):
-        if type(indexorchild) is int:
-            return self.get_items()[indexorchild]
+    def __get_child(self, idindexorchild):
+        if type(idindexorchild) is int:
+            return self.get_items()[idindexorchild]
+        elif type(idindexorchild) is str:
+            for child in self.get_items():
+                if self.get_id(child) == idindexorchild:
+                    return child
         else:
-            return indexorchild
+            return idindexorchild
 
     def get_items(self):
         if self.format == 'atom':
@@ -24,8 +28,8 @@ class Feed():
         elif self.format == 'rss':
             return self.root.find('channel').findall('item')
 
-    def get_title(self, indexorchild):
-        child = self.__index2child(indexorchild)
+    def get_title(self, idindexorchild):
+        child = self.__get_child(idindexorchild)
         if self.format == 'atom':
             title = child.find('{http://www.w3.org/2005/Atom}title')
             if title != None:
@@ -36,8 +40,8 @@ class Feed():
                 return title.text
         return ""
 
-    def get_description(self, indexorchild):
-        child = self.__index2child(indexorchild)
+    def get_description(self, idindexorchild):
+        child = self.__get_child(idindexorchild)
         if self.format == 'atom':
             desc = child.find('{http://www.w3.org/2005/Atom}summary')
             if desc != None:
@@ -48,8 +52,8 @@ class Feed():
                 return desc.text
         return ""
 
-    def append_description(self, indexorchild, text):   # todo: create if not existing
-        child = self.__index2child(indexorchild)
+    def append_description(self, idindexorchild, text):   # todo: create if not existing
+        child = self.__get_child(idindexorchild)
         if self.format == 'atom':
             desc = child.find('{http://www.w3.org/2005/Atom}summary')
             if desc != None:
@@ -59,11 +63,11 @@ class Feed():
             if desc != None:
                 desc.text += text
         # If item has a content-tag, we also appand to that
-        if self.get_content(indexorchild):
-            self.append_content(indexorchild, text)
+        if self.get_content(idindexorchild):
+            self.append_content(idindexorchild, text)
 
-    def get_content(self, indexorchild):
-        child = self.__index2child(indexorchild)
+    def get_content(self, idindexorchild):
+        child = self.__get_child(idindexorchild)
         if self.format == 'atom':
             cont = child.find('{http://www.w3.org/2005/Atom}content')
             if cont != None:
@@ -74,8 +78,8 @@ class Feed():
                 return cont.text
         return ""
 
-    def append_content(self, indexorchild, text):   # todo: create if not existing
-        child = self.__index2child(indexorchild)
+    def append_content(self, idindexorchild, text):   # todo: create if not existing
+        child = self.__get_child(idindexorchild)
         if self.format == 'atom':
             cont = child.find('{http://www.w3.org/2005/Atom}content')
             if cont != None:
@@ -85,8 +89,8 @@ class Feed():
             if cont != None:
                 cont.text += text
 
-    def get_link(self, indexorchild):
-        child = self.__index2child(indexorchild)
+    def get_link(self, idindexorchild):
+        child = self.__get_child(idindexorchild)
         if self.format == 'atom':
             link = child.find('{http://www.w3.org/2005/Atom}link')
             if link != None:
@@ -96,8 +100,19 @@ class Feed():
             if link != None:
                 return link.text
 
-    def remove_item(self, indexorchild):
-        child = self.__index2child(indexorchild)
+    def get_id(self, idindexorchild):
+        child = self.__get_child(idindexorchild)
+        if self.format == 'atom':
+            gid = child.find('{http://www.w3.org/2005/Atom}id')
+            if gid != None:
+                return gid.text
+        elif self.format == 'rss':
+            gid =  child.find('guid')
+            if gid != None:
+                return gid.text
+
+    def remove_item(self, idindexorchild):
+        child = self.__get_child(idindexorchild)
         if self.format == 'atom':
             self.root.remove(child)
         elif self.format == 'rss':

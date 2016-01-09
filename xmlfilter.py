@@ -66,7 +66,7 @@ if 'sitename' in locals():
     blackwords.update(read_filterlist(sitename))
 
 
-wordlists=[]
+wordlists={}
 
 feed = Feed(feedfile)
 for child in feed.get_items(): 
@@ -74,22 +74,24 @@ for child in feed.get_items():
     summary = feed.get_description(child)
     content = feed.get_content(child)
     link = feed.get_link(child)
+    gid = feed.get_id(child)
 
     lvl=0
 
     wordlist=comparetext.analyse(title + " " + summary + " " + content )
-    for index, dic in enumerate(wordlists):
+    for index, dic in wordlists.items():
         t=comparetext.comp(wordlist, dic)
         if t>cmp_treshhold:
             feed.append_description(index, "<br><br>Siehe auch: <a href=\"" + link + "\">"+title+"</a>")
             warn("removing dupplicate: ", title)
+            warn("  is duplicate of: ", feed.get_title(index))
             lvl=treshhold+1
             continue
     if lvl > treshhold:
         feed.remove_item(child)
         continue
     else:
-        wordlists.append(wordlist)
+        wordlists[gid] = wordlist
 
     for word in blackwords:
         if title.find(word) != -1:
