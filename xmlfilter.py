@@ -78,12 +78,13 @@ for child in feed.get_items():
 
     lvl=0
 
+    # Check for duplicates
     wordlist=comparetext.analyse(title + " " + summary + " " + content )
     for index, dic in wordlists.items():
         t=comparetext.comp(wordlist, dic)
         if t>cmp_treshhold:
             feed.append_description(index, "<br><br>Siehe auch: <a href=\"" + link + "\">"+title+"</a>")
-            warn("removing dupplicate: ", title)
+            warn("removing duplicate: ", title)
             warn("  is duplicate of: ", feed.get_title(index))
             lvl=treshhold+1
             continue
@@ -93,6 +94,7 @@ for child in feed.get_items():
     else:
         wordlists[gid] = wordlist
 
+    # Check against blackwords
     for word in blackwords:
         if title.find(word) != -1:
             lvl += title_scale*blackwords[word]
