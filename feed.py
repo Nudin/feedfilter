@@ -84,7 +84,9 @@ class Feed():
         Appends the given text to the description
         (and to the content for now – this will probably changed in future)
         """
+        print("foo", idindexorchild)
         child = self.__get_child(idindexorchild)
+        print(child)
         if self.format == 'atom':
             desc = child.find('{http://www.w3.org/2005/Atom}summary')
             if desc != None:

@@ -107,6 +107,8 @@ for child in feed.get_items():
     if lvl > treshhold:
         warn("removing item!")
         feed.remove_item(child)
+    else:
+        feed.append_description(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
     log(lvl, title)
 
 if outputfile == None:
