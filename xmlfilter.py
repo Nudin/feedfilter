@@ -102,6 +102,8 @@ for child in feed.get_items():
     for word in blackwords:
         if summary.find(word) != -1:
             lvl += blackwords[word]
+        if content.find(word) != -1:
+            lvl += blackwords[word]
     if lvl > treshhold:
         warn("removing item!")
         feed.remove_item(child)
