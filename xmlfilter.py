@@ -107,6 +107,7 @@ for child in feed.get_items():
     if lvl > treshhold:
         warn("removing item!")
         feed.remove_item(child)
+        del wordlists[gid]
     else:
         feed.append_description(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
     log(lvl, title)
