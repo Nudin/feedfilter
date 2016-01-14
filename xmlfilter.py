@@ -2,6 +2,7 @@
 import urllib.request
 import sys
 import os
+import re
 import comparetext
 from feed import Feed
 import configparser
@@ -28,7 +29,7 @@ def read_filterlist(filename):
             for line in infile:
                 if line[0] == "#":
                     continue
-                tmp=line.strip().split('\t')
+                tmp=re.sub('  +', '\t', line.strip()).split('\t')
                 try:
                     blackwords[tmp[0]]=float(tmp[1])
                 except:
