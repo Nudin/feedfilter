@@ -53,46 +53,47 @@ class Feed():
         """
         Get the title of a news-item
         """
-        child = self.__get_child(idindexorchild)
-        if self.format == 'atom':
-            title = child.find('{http://www.w3.org/2005/Atom}title')
-            if title != None:
+        try:
+            child = self.__get_child(idindexorchild)
+            if self.format == 'atom':
+                title = child.find('{http://www.w3.org/2005/Atom}title')
                 return title.text
-        elif self.format == 'rss':
-            title = child.find('title')
-            if title != None:
+            elif self.format == 'rss':
+                title = child.find('title')
                 return title.text
-        return ""
+        except (AttributeError):
+            return ""
 
     def get_description(self, idindexorchild):
         """
         Get the description of a news-item
         """
-        child = self.__get_child(idindexorchild)
-        if self.format == 'atom':
-            desc = child.find('{http://www.w3.org/2005/Atom}summary')
-            if desc != None:
+        try:
+            child = self.__get_child(idindexorchild)
+            if self.format == 'atom':
+                desc = child.find('{http://www.w3.org/2005/Atom}summary')
                 return desc.text 
-        elif self.format == 'rss':
-            desc = child.find('description')
-            if desc != None:
+            elif self.format == 'rss':
+                desc = child.find('description')
                 return desc.text
-        return ""
+        except (AttributeError):
+            return ""
 
     def append_description(self, idindexorchild, text):   # todo: create if not existing
         """
         Appends the given text to the description
         (and to the content for now – this will probably changed in future)
         """
-        child = self.__get_child(idindexorchild)
-        if self.format == 'atom':
-            desc = child.find('{http://www.w3.org/2005/Atom}summary')
-            if desc != None:
+        try:
+            child = self.__get_child(idindexorchild)
+            if self.format == 'atom':
+                desc = child.find('{http://www.w3.org/2005/Atom}summary')
                 desc.text += text
-        elif self.format == 'rss':
-            desc = child.find('description')
-            if desc != None:
+            elif self.format == 'rss':
+                desc = child.find('description')
                 desc.text += text
+        except (AttributeError):
+            pass
         # If item has a content-tag, we also appand to that
         if self.get_content(idindexorchild):
             self.append_content(idindexorchild, text)
@@ -101,58 +102,63 @@ class Feed():
         """
         Get the content of a news-item
         """
-        child = self.__get_child(idindexorchild)
-        if self.format == 'atom':
-            cont = child.find('{http://www.w3.org/2005/Atom}content')
-            if cont != None:
+        try:
+            child = self.__get_child(idindexorchild)
+            if self.format == 'atom':
+                cont = child.find('{http://www.w3.org/2005/Atom}content')
                 return  "".join(content.itertext())
-        elif self.format == 'rss':
-            cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
-            if cont != None:
+            elif self.format == 'rss':
+                cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
                 return cont.text
-        return ""
+        except (AttributeError):
+            return ""
 
     def append_content(self, idindexorchild, text):   # todo: create if not existing
         """
         Appends the given text to the content
         """
-        child = self.__get_child(idindexorchild)
-        if self.format == 'atom':
-            cont = child.find('{http://www.w3.org/2005/Atom}content')
-            if cont != None:
+        try:
+            child = self.__get_child(idindexorchild)
+            if self.format == 'atom':
+                cont = child.find('{http://www.w3.org/2005/Atom}content')
                 cont = etree.fromstring(etree.tostring(cont) + text)
-        elif self.format == 'rss':
-            cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
-            if cont != None:
+            elif self.format == 'rss':
+                cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
                 cont.text += text
+        except (AttributeError):
+            pass
 
     def get_link(self, idindexorchild):
         """
         Get the link of a news-item
         """
-        child = self.__get_child(idindexorchild)
-        if self.format == 'atom':
-            link = child.find('{http://www.w3.org/2005/Atom}link')
-            if link != None:
+        try:
+            child = self.__get_child(idindexorchild)
+            if self.format == 'atom':
+                link = child.find('{http://www.w3.org/2005/Atom}link')
                 return link.attrib['href']
-        elif self.format == 'rss':
-            link =  child.find('link')
-            if link != None:
+            elif self.format == 'rss':
+                link =  child.find('link')
                 return link.text
+        except (AttributeError):
+            # This should never happen, handling necessary? 
+            return ""
 
     def get_id(self, idindexorchild):
         """
         Get the id of a news-item
         """
-        child = self.__get_child(idindexorchild)
-        if self.format == 'atom':
-            gid = child.find('{http://www.w3.org/2005/Atom}id')
-            if gid != None:
+        try:
+            child = self.__get_child(idindexorchild)
+            if self.format == 'atom':
+                gid = child.find('{http://www.w3.org/2005/Atom}id')
                 return gid.text
-        elif self.format == 'rss':
-            gid =  child.find('guid')
-            if gid != None:
+            elif self.format == 'rss':
+                gid =  child.find('guid')
                 return gid.text
+        except (AttributeError):
+            # This should never happen, handling necessary? 
+            return ""
 
     def remove_item(self, idindexorchild):
         """
