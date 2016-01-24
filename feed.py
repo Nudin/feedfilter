@@ -106,7 +106,7 @@ class Feed():
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
                 cont = child.find('{http://www.w3.org/2005/Atom}content')
-                return  "".join(content.itertext())
+                return  "".join(cont.itertext())
             elif self.format == 'rss':
                 cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
                 return cont.text
