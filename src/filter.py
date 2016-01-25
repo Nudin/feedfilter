@@ -6,6 +6,7 @@ class Filter():
     
     def __init__(self, filterdir):
         self.blackwords = {}
+        self.exactblackwords = {}
         self.filterdir=filterdir
 
 
@@ -20,7 +21,10 @@ class Filter():
                         continue
                     tmp=c.sub('\t', line.strip()).split('\t')
                     try:
-                        self.blackwords[tmp[0]]=float(tmp[1])
+                        if len(tmp[0]) <= 3 or tmp[0].isupper():
+                            self.exactblackwords[tmp[0]]=float(tmp[1])
+                        else:
+                            self.blackwords[tmp[0].lower()]=float(tmp[1])
                     except:
                         warn("Cannot parse line in", filename, ":")
                         warn(line)
@@ -29,9 +33,13 @@ class Filter():
             warn('error opening file:', filename)
 
     def check(self, text, multiplier):  
+        ltext=text.lower()
         lvl = 0
         for word in self.blackwords:
-            if text.find(word) != -1:
+            if ltext.find(word) != -1:
                 lvl += multiplier*self.blackwords[word]
+        for word in self.exactblackwords:
+            if text.find(word) != -1:
+                lvl += multiplier*self.exactblackwords[word]
         return lvl
 
