@@ -37,7 +37,7 @@ if sys.argv[1][0:4] == "http":
 else:
     feedfile = sys.argv[1]
 
-# read backwordlist
+# initialise filter
 wordfilter = Filter(confdir)
 wordfilter.read_filterlist('./blackwordlist.txt')
 if 'sitename' in locals():
