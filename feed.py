@@ -108,9 +108,9 @@ class Feed():
     def _insert_or_append(self, text, addition):
         p=text.find(self.marker)
         if p == -1:
-            text += "<br><br><b>Siehe auch</b><br>:" + addition + self.marker
+            text += "<br>Siehe auch:<ul><li>" + addition + "</li>" + self.marker + "<ul>"
         else:
-            text = text[0:p] + addition + "<br>" + text[p:]
+            text = text[0:p] + "<li>" + addition + "</li>" + text[p:]
         return text
 
 
