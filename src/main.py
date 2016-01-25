@@ -74,8 +74,10 @@ for child in feed.get_items():
 
     # Check against blackwords
     lvl  = wordfilter.check(title, title_scale)
-    lvl += wordfilter.check(summary, 1)
-    lvl += wordfilter.check(content, 1)
+    if content != "":
+        lvl += wordfilter.check(content, 1)
+    elif summary != "":
+        lvl += wordfilter.check(summary, 1)
     if lvl > treshhold:
         warn("removing item!")
         feed.remove_item(child)
