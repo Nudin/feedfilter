@@ -85,7 +85,6 @@ class Feed():
     def append_description(self, idindexorchild, text):   # todo: create if not existing
         """
         Appends the given text to the description
-        (and to the content for now – this will probably changed in future)
         """
         try:
             child = self.__get_child(idindexorchild)
@@ -97,9 +96,6 @@ class Feed():
                 desc.text += text
         except (AttributeError):
             pass
-        # If item has a content-tag, we also appand to that
-        if self.get_content(idindexorchild):
-            self.append_content(idindexorchild, text)
 
 
     def _insert_or_append(text, addition):
