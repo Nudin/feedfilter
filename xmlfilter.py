@@ -84,7 +84,7 @@ for child in feed.get_items():
     for index, dic in wordlists.items():
         t=comparetext.comp(wordlist, dic)
         if t>cmp_treshhold:
-            feed.append_description(index, "<br><br>Siehe auch: <a href=\"" + link + "\">"+title+"</a>")
+            feed.add_crosslink(index, link, title)
             warn("removing duplicate: ", title)
             warn("  is duplicate of: ", feed.get_title(index))
             lvl=treshhold+1

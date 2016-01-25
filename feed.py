@@ -1,3 +1,5 @@
+import string
+import random
 import xml.etree.ElementTree as etree
 
 
@@ -21,6 +23,7 @@ class Feed():
         else:
             print("Unknown feedformat!")
             exit
+        self.marker = "<!--" + ''.join(random.choice(string.ascii_letters) for _ in range(12)) + "-->"
        
     def __get_child(self, idindexorchild):
         """
@@ -97,6 +100,43 @@ class Feed():
         # If item has a content-tag, we also appand to that
         if self.get_content(idindexorchild):
             self.append_content(idindexorchild, text)
+
+
+    def _insert_or_append(text, addition):
+        p=text.find(self.marker)
+        if p == -1:
+            text += "<br><br><b>Siehe auch</b><br>:" + fulllink + self.marker
+        else:
+            text = text[0:p] + fulllink + "<br>" + text[p:]
+        return text
+
+
+    def add_crosslink(self, idindexorchild, link, title):   # todo: create if not existing
+        """
+        Appends the given link to the description under an heading "see also"
+        """
+        fulllink = "<a href=\"" + link + "\">" + title + "</a>"
+        try:
+            child = self.__get_child(idindexorchild)
+            if self.format == 'atom':
+                desc = child.find('{http://www.w3.org/2005/Atom}summary')
+                desc.text = self._insert_or_append(desc.text)
+            elif self.format == 'rss':
+                desc = child.find('description')
+                desc.text = self._insert_or_append(desc.text)
+        except (AttributeError):
+            pass
+        try:
+            child = self.__get_child(idindexorchild)
+            if self.format == 'atom':
+                content = child.find('{http://www.w3.org/2005/Atom}content')
+                content.text = self._insert_or_append(content.text)
+            elif self.format == 'rss':
+                content = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
+                content.text = self._insert_or_append(content.text)
+        except (AttributeError):
+            pass
+
 
     def get_content(self, idindexorchild):
         """
