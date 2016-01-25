@@ -2,44 +2,13 @@
 import urllib.request
 import sys
 import os
-import re
 import comparetext
 from feed import Feed
 import configparser
+from filter import Filter
+import utils
+from utils import *
 
-
-def log(*objs):
-    if silent:
-        return
-    print("\033[0m", end="", flush=True)
-    print(*objs, file=sys.stderr)
-    print("\033[0m", end="", flush=True)
-
-def warn(*objs):
-    if silent:
-        return
-    print("\033[31m", end="", flush=True)
-    print(*objs, file=sys.stderr)
-    print("\033[0m", end="", flush=True)
-
-def read_filterlist(filename):
-    blackwords = {}
-    c = re.compile('  +')
-    try:
-        with open(os.path.join(confdir, filename), 'rU') as infile:
-            for line in infile:
-                if line[0] == "#":
-                    continue
-                tmp=c.sub('\t', line.strip()).split('\t')
-                try:
-                    blackwords[tmp[0]]=float(tmp[1])
-                except:
-                    warn("Cannot parse line in", filename, ":")
-                    warn(line)
-                    continue
-    except IOError:
-        warn('error opening file:', filename)
-    return blackwords
 
 # read env-variables 
 confdir = os.getenv('FEED_FILTER_CONF', 
@@ -52,10 +21,10 @@ config.read(os.path.join(confdir, 'feedfilter.conf'))
 treshhold = float(config['DEFAULT'].get('treshhold', 1))
 cmp_treshhold = float(config['DEFAULT'].get('cmp_treshhold', 0.5))
 title_scale = float(config['DEFAULT'].get('title_scale', 2))
-silent = config['DEFAULT'].get('silent', "True") == 'True'
+utils.silent = config['DEFAULT'].get('silent', "True") == 'True'
 outputfile = config['DEFAULT'].get('outputfile', None)
 if debug_mode == "dev":
-    silent = False
+    utils.silent = False
     outputfile = 'output.xml'
 
 # parse arguments and read feed from file/url
@@ -69,9 +38,10 @@ else:
     feedfile = sys.argv[1]
 
 # read backwordlist
-blackwords = read_filterlist('./blackwordlist.txt')
+wordfilter = Filter(confdir)
+wordfilter.read_filterlist('./blackwordlist.txt')
 if 'sitename' in locals():
-    blackwords.update(read_filterlist(sitename))
+    wordfilter.read_filterlist(sitename)
 
 
 wordlists={}
@@ -103,14 +73,9 @@ for child in feed.get_items():
         wordlists[gid] = wordlist
 
     # Check against blackwords
-    for word in blackwords:
-        if title.find(word) != -1:
-            lvl += title_scale*blackwords[word]
-    for word in blackwords:
-        if summary.find(word) != -1:
-            lvl += blackwords[word]
-        if content.find(word) != -1:
-            lvl += blackwords[word]
+    lvl  = wordfilter.check(title, title_scale)
+    lvl += wordfilter.check(summary, 1)
+    lvl += wordfilter.check(content, 1)
     if lvl > treshhold:
         warn("removing item!")
         feed.remove_item(child)
