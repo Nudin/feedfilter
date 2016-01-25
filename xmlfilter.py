@@ -24,12 +24,13 @@ def warn(*objs):
 
 def read_filterlist(filename):
     blackwords = {}
+    c = re.compile('  +')
     try:
         with open(os.path.join(confdir, filename), 'rU') as infile:
             for line in infile:
                 if line[0] == "#":
                     continue
-                tmp=re.sub('  +', '\t', line.strip()).split('\t')
+                tmp=c.sub('\t', line.strip()).split('\t')
                 try:
                     blackwords[tmp[0]]=float(tmp[1])
                 except:
@@ -40,9 +41,12 @@ def read_filterlist(filename):
         warn('error opening file:', filename)
     return blackwords
 
-# read in config
+# read env-variables 
 confdir = os.getenv('FEED_FILTER_CONF', 
         os.path.join(os.getenv('HOME'), ".feedfilter"))
+debug_mode = os.getenv('DEBUG',  "False")
+
+# read in config
 config = configparser.ConfigParser()
 config.read(os.path.join(confdir, 'feedfilter.conf'))
 treshhold = float(config['DEFAULT'].get('treshhold', 1))
@@ -50,6 +54,9 @@ cmp_treshhold = float(config['DEFAULT'].get('cmp_treshhold', 0.5))
 title_scale = float(config['DEFAULT'].get('title_scale', 2))
 silent = config['DEFAULT'].get('silent', "True") == 'True'
 outputfile = config['DEFAULT'].get('outputfile', None)
+if debug_mode == "dev":
+    silent = False
+    outputfile = 'output.xml'
 
 # parse arguments and read feed from file/url
 if len(sys.argv) != 2:
