@@ -82,7 +82,8 @@ class Feed():
         except (AttributeError):
             return ""
 
-    def append_description(self, idindexorchild, text):   # todo: create if not existing
+
+    def set_description(self, idindexorchild, text):   # todo: create if not existing
         """
         Appends the given text to the description
         """
@@ -90,48 +91,39 @@ class Feed():
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
                 desc = child.find('{http://www.w3.org/2005/Atom}summary')
-                desc.text += text
+                desc.text = text
             elif self.format == 'rss':
                 desc = child.find('description')
-                desc.text += text
+                desc.text = text
         except (AttributeError):
             pass
 
 
-    def _insert_or_append(text, addition):
+    def append_description(self, idindexorchild, text):   # todo: create if not existing
+        """
+        Appends the given text to the description
+        """
+        self.set_description(idindexorchild, self.get_description(idindexorchild) + text)
+
+    def _insert_or_append(self, text, addition):
         p=text.find(self.marker)
         if p == -1:
-            text += "<br><br><b>Siehe auch</b><br>:" + fulllink + self.marker
+            text += "<br><br><b>Siehe auch</b><br>:" + addition + self.marker
         else:
-            text = text[0:p] + fulllink + "<br>" + text[p:]
+            text = text[0:p] + addition + "<br>" + text[p:]
         return text
 
 
-    def add_crosslink(self, idindexorchild, link, title):   # todo: create if not existing
+    def add_crosslink(self, idindexorchild, link, title):
         """
-        Appends the given link to the description under an heading "see also"
+        Appends the given link to the description and content under an heading "see also"
         """
         fulllink = "<a href=\"" + link + "\">" + title + "</a>"
-        try:
-            child = self.__get_child(idindexorchild)
-            if self.format == 'atom':
-                desc = child.find('{http://www.w3.org/2005/Atom}summary')
-                desc.text = self._insert_or_append(desc.text)
-            elif self.format == 'rss':
-                desc = child.find('description')
-                desc.text = self._insert_or_append(desc.text)
-        except (AttributeError):
-            pass
-        try:
-            child = self.__get_child(idindexorchild)
-            if self.format == 'atom':
-                content = child.find('{http://www.w3.org/2005/Atom}content')
-                content.text = self._insert_or_append(content.text)
-            elif self.format == 'rss':
-                content = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
-                content.text = self._insert_or_append(content.text)
-        except (AttributeError):
-            pass
+        desc = self.get_description(idindexorchild)
+        self.set_description(idindexorchild, self._insert_or_append(desc, fulllink))
+
+        cont = self.get_content(idindexorchild)
+        self.set_content(idindexorchild, self._insert_or_append(cont, fulllink ))
 
 
     def get_content(self, idindexorchild):
@@ -142,14 +134,15 @@ class Feed():
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
                 cont = child.find('{http://www.w3.org/2005/Atom}content')
-                return  "".join(cont.itertext())
+                return  etree.tostring(cont) 
             elif self.format == 'rss':
                 cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
                 return cont.text
         except (AttributeError):
             return ""
 
-    def append_content(self, idindexorchild, text):   # todo: create if not existing
+
+    def set_content(self, idindexorchild, text):   # todo: create if not existing
         """
         Appends the given text to the content
         """
@@ -157,12 +150,18 @@ class Feed():
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
                 cont = child.find('{http://www.w3.org/2005/Atom}content')
-                cont = etree.fromstring(etree.tostring(cont) + text)
+                cont = etree.fromstring(text)
             elif self.format == 'rss':
                 cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
-                cont.text += text
+                cont.text = text
         except (AttributeError):
             pass
+
+    def append_content(self, idindexorchild, text):
+        """
+        Appends the given text to the content
+        """
+        self.set_conent(idindexorchild, self.get_content(idindexorchild) + text)
 
     def get_link(self, idindexorchild):
         """
