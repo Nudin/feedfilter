@@ -129,10 +129,12 @@ class Feed():
         """
         fulllink = "<a href=\"" + link + "\">" + title + "</a>"
         desc = self.get_description(idindexorchild)
-        self.set_description(idindexorchild, self._insert_or_append(desc, fulllink))
+        if desc != "":
+            self.set_description(idindexorchild, self._insert_or_append(desc, fulllink))
 
         cont = self.get_content(idindexorchild)
-        self.set_content(idindexorchild, self._insert_or_append(cont, fulllink ))
+        if cont != "":
+            self.set_content(idindexorchild, self._insert_or_append(cont, fulllink ))
 
 
     def get_content(self, idindexorchild):
