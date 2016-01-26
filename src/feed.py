@@ -57,7 +57,7 @@ class Feed():
         Get the language of the feed
         """
         if self.format == 'atom':
-            return self.root.attrib['xml:lang'].lower()
+            return self.root.attrib['{http://www.w3.org/XML/1998/namespace}lang'].lower()
         elif self.format == 'rss':
             return self.root.find('channel').find('language').text.lower()
 
