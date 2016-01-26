@@ -4,16 +4,22 @@ import os
 from collections import Counter
 import re
 
-dir = os.path.join(os.path.dirname(__file__), "..", "include", "commonwords")
+filedir = os.path.join(os.path.dirname(__file__), os.path.pardir,
+                   "include", "commonwords")
 
 common_words = {}
-for lang in os.listdir(dir):
-    filename = os.path.join(dir, lang)
+for lang in os.listdir(filedir):
+    filename = os.path.join(filedir, lang)
     common_words[lang] = open(filename, 'rU').read().split()
 
-re_filters = ['\d+$', '\w$', '[A-Z][a-z]{1,2}$' ]
-    
+# we remove all special characters from the text before splitting it into words
 specialchar_filter = re.compile('[^\w\s]+', re.UNICODE)
+
+# For the comparison we ignore all "words"
+# only consisting of digits,
+# of length one and
+# of length two or three witch are not written in UPPER case
+re_filters = ['\d+$', '\w$', '[A-Z][a-z]{1,2}$' ]
 compiled_re_filters = (re.compile(i) for i in re_filters)
 
 def analyse(lang, txt):
