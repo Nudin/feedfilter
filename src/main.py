@@ -15,17 +15,9 @@ confdir = os.getenv('FEED_FILTER_CONF',
         os.path.join(os.getenv('HOME'), ".feedfilter"))
 debug_mode = os.getenv('DEBUG',  "False")
 
-# read in config
-config = configparser.ConfigParser()
-config.read(os.path.join(confdir, 'feedfilter.conf'))
-treshhold = float(config['DEFAULT'].get('treshhold', 1))
-cmp_treshhold = float(config['DEFAULT'].get('cmp_treshhold', 0.5))
-title_scale = float(config['DEFAULT'].get('title_scale', 2))
-utils.silent = config['DEFAULT'].get('silent', "True") == 'True'
-outputfile = config['DEFAULT'].get('outputfile', None)
-if debug_mode == "dev":
-    utils.silent = False
-    outputfile = 'output.xml'
+# read configfile
+configs = configparser.ConfigParser()
+configs.read(os.path.join(confdir, 'feedfilter.conf'))
 
 # parse arguments and read feed from file/url
 if len(sys.argv) != 2:
@@ -37,17 +29,33 @@ if sys.argv[1][0:4] == "http":
 else:
     feedfile = sys.argv[1]
 
-# initialise filter
+# read in configurations
+if sitename in configs:
+    config = configs[sitename]
+elif 'DEFAULT' in configs:
+    config = configs['DEFAULT']
+else:
+    config = {}
+treshhold = float(config.get('treshhold', 1))
+cmp_treshhold = float(config.get('cmp_treshhold', 0.5))
+title_scale = float(config.get('title_scale', 2))
+utils.silent = config.get('silent', "True") == 'True'
+outputfile = config.get('outputfile', None)
+if debug_mode == "dev":
+    utils.silent = False
+    outputfile = 'output.xml'
+
+# read and parse filterfiles
 wordfilter = Filter(confdir)
 wordfilter.read_filterlist('./blackwordlist.txt')
 if 'sitename' in locals():
     wordfilter.read_filterlist(sitename)
 
-
-wordlists={}
-
+# Parse feed
 feed = Feed(feedfile)
 lang = feed.get_lang()
+
+wordlists={}
 for child in feed.get_items(): 
     title = feed.get_title(child)
     summary = feed.get_description(child)
