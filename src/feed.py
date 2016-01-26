@@ -52,6 +52,15 @@ class Feed():
         elif self.format == 'rss':
             return self.root.find('channel').findall('item')
 
+    def get_lang(self):
+        """
+        Get the language of the feed
+        """
+        if self.format == 'atom':
+            return self.root.attrib['xml:lang'].lower()
+        elif self.format == 'rss':
+            return self.root.find('channel').find('language').text.lower()
+
     def get_title(self, idindexorchild):
         """
         Get the title of a news-item

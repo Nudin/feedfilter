@@ -47,6 +47,7 @@ if 'sitename' in locals():
 wordlists={}
 
 feed = Feed(feedfile)
+lang = feed.get_lang()
 for child in feed.get_items(): 
     title = feed.get_title(child)
     summary = feed.get_description(child)
@@ -57,7 +58,7 @@ for child in feed.get_items():
     lvl=0
 
     # Check for duplicates
-    wordlist=comparetext.analyse(title + " " + summary + " " + content )
+    wordlist=comparetext.analyse(lang, title + " " + summary + " " + content )
     for index, dic in wordlists.items():
         t=comparetext.comp(wordlist, dic)
         if t>cmp_treshhold:
