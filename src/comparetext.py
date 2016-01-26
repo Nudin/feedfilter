@@ -3,14 +3,19 @@ import math
 import os
 from collections import Counter
 import re
+import utils
 
 filedir = os.path.join(os.path.dirname(__file__), os.path.pardir,
                    "include", "commonwords")
 
 common_words = {}
 for lang in os.listdir(filedir):
-    filename = os.path.join(filedir, lang)
-    common_words[lang] = open(filename, 'rU').read().split()
+    try:
+        filename = os.path.join(filedir, lang)
+        common_words[lang] = open(filename, 'rU').read().split()
+    except Exception:
+        utils.warn("Can't load file", common_words[lang])
+        pass
 
 # we remove all special characters from the text before splitting it into words
 specialchar_filter = re.compile('[^\w\s]+', re.UNICODE)
@@ -40,6 +45,9 @@ def analyse(lang, txt):
                del wordlist[word]
             except KeyError:
                 continue
+        return wordlist
+    else:
+        utils.warn("No commonwords-list available for language", lang)
         return wordlist
 
 def comp(dict_1, dict_2):
