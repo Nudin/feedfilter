@@ -108,7 +108,7 @@ class Feed():
             pass
 
 
-    def append_description(self, idindexorchild, text):   # todo: create if not existing
+    def append_description(self, idindexorchild, text):
         """
         Appends the given text to the description
         """
@@ -145,7 +145,7 @@ class Feed():
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
                 cont = child.find('{http://www.w3.org/2005/Atom}content')
-                return  etree.tostring(cont) 
+                return ''.join([etree.tostring(i).decode() for i in list(cont)])
             elif self.format == 'rss':
                 cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
                 return cont.text
@@ -161,7 +161,12 @@ class Feed():
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
                 cont = child.find('{http://www.w3.org/2005/Atom}content')
-                cont = etree.fromstring(text)
+                try:
+                        new = etree.fromstring(text)
+                except etree.ParseError:
+                        new = etree.fromstring('<div>' + text + '</div>')
+                [c.remove(i) for i in list(c)]
+                c.append(new)
             elif self.format == 'rss':
                 cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
                 cont.text = text
