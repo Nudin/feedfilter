@@ -56,10 +56,13 @@ class Feed():
         """
         Get the language of the feed
         """
-        if self.format == 'atom':
-            return self.root.attrib['{http://www.w3.org/XML/1998/namespace}lang'].lower()
-        elif self.format == 'rss':
-            return self.root.find('channel').find('language').text.lower()
+        try:
+            if self.format == 'atom':
+                return self.root.attrib['{http://www.w3.org/XML/1998/namespace}lang'].lower()
+            elif self.format == 'rss':
+                return self.root.find('channel').find('language').text.lower()
+        except Exception:
+            return ""
 
     def get_title(self, idindexorchild):
         """
@@ -72,8 +75,8 @@ class Feed():
                 return title.text
             elif self.format == 'rss':
                 title = child.find('title')
-                return title.text
-        except (AttributeError):
+                return title.text.strip()
+        except Exception:
             return ""
 
     def get_description(self, idindexorchild):
@@ -87,8 +90,8 @@ class Feed():
                 return desc.text 
             elif self.format == 'rss':
                 desc = child.find('description')
-                return desc.text
-        except (AttributeError):
+                return desc.text.strip()
+        except Exception:
             return ""
 
 
@@ -104,7 +107,7 @@ class Feed():
             elif self.format == 'rss':
                 desc = child.find('description')
                 desc.text = text
-        except (AttributeError):
+        except Exception:
             pass
 
 
@@ -148,8 +151,8 @@ class Feed():
                 return  etree.tostring(cont) 
             elif self.format == 'rss':
                 cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
-                return cont.text
-        except (AttributeError):
+                return cont.text.strip()
+        except Exception:
             return ""
 
 
@@ -165,7 +168,7 @@ class Feed():
             elif self.format == 'rss':
                 cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
                 cont.text = text
-        except (AttributeError):
+        except Exception:
             pass
 
     def append_content(self, idindexorchild, text):
@@ -185,8 +188,8 @@ class Feed():
                 return link.attrib['href']
             elif self.format == 'rss':
                 link =  child.find('link')
-                return link.text
-        except (AttributeError):
+                return link.text.strip()
+        except Exception:
             # This should never happen, handling necessary? 
             return ""
 
@@ -201,8 +204,8 @@ class Feed():
                 return gid.text
             elif self.format == 'rss':
                 gid =  child.find('guid')
-                return gid.text
-        except (AttributeError):
+                return gid.text.strip()
+        except Exception:
             # This should never happen, handling necessary? 
             return ""
 
