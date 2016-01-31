@@ -95,7 +95,7 @@ class Feed():
             return ""
 
 
-    def set_description(self, idindexorchild, text):   # todo: create if not existing
+    def set_description(self, idindexorchild, text):
         """
         Appends the given text to the description
         """
@@ -103,15 +103,19 @@ class Feed():
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
                 desc = child.find('{http://www.w3.org/2005/Atom}summary')
+                if desc is None:
+                    desc = etree.SubElement(child, '{http://www.w3.org/2005/Atom}summary')
                 desc.text = text
             elif self.format == 'rss':
                 desc = child.find('description')
+                if desc is None:
+                    desc = etree.SubElement(child, 'description')
                 desc.text = text
         except Exception:
             pass
 
 
-    def append_description(self, idindexorchild, text):   # todo: create if not existing
+    def append_description(self, idindexorchild, text):
         """
         Appends the given text to the description
         """
@@ -148,7 +152,7 @@ class Feed():
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
                 cont = child.find('{http://www.w3.org/2005/Atom}content')
-                return  etree.tostring(cont) 
+                return ''.join([etree.tostring(i).decode() for i in list(cont)])
             elif self.format == 'rss':
                 cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
                 return cont.text.strip()
@@ -156,7 +160,7 @@ class Feed():
             return ""
 
 
-    def set_content(self, idindexorchild, text):   # todo: create if not existing
+    def set_content(self, idindexorchild, text):
         """
         Appends the given text to the content
         """
@@ -164,9 +168,18 @@ class Feed():
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
                 cont = child.find('{http://www.w3.org/2005/Atom}content')
-                cont = etree.fromstring(text)
+                if cont is None:
+                    cont = etree.SubElement(child, '{http://www.w3.org/2005/Atom}content')
+                try:
+                        new = etree.fromstring(text)
+                except etree.ParseError:
+                        new = etree.fromstring('<div>' + text + '</div>')
+                [c.remove(i) for i in list(c)]
+                c.append(new)
             elif self.format == 'rss':
                 cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
+                if cont is None:
+                    cont = etree.SubElement(child, '{http://purl.org/rss/1.0/modules/content/}encoded')
                 cont.text = text
         except Exception:
             pass
