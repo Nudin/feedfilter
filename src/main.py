@@ -10,15 +10,6 @@ import utils
 from utils import *
 
 
-# read env-variables 
-confdir = os.getenv('FEED_FILTER_CONF', 
-        os.path.join(os.getenv('HOME'), ".feedfilter"))
-debug_mode = os.getenv('DEBUG',  "False")
-
-# read configfile
-configs = configparser.ConfigParser()
-configs.read(os.path.join(confdir, 'feedfilter.conf'))
-
 # parse arguments and read feed from file/url
 if len(sys.argv) != 2:
     warn("no file/url given")
@@ -29,18 +20,31 @@ if sys.argv[1][0:4] == "http":
 else:
     feedfile = sys.argv[1]
 
-# read in configurations
-if sitename in configs:
-    config = configs[sitename]
-elif 'DEFAULT' in configs:
-    config = configs['DEFAULT']
-else:
-    config = {}
-treshhold = float(config.get('treshhold', 1))
-cmp_treshhold = float(config.get('cmp_treshhold', 0.5))
-title_scale = float(config.get('title_scale', 2))
-utils.silent = config.get('silent', "True") == 'True'
-outputfile = config.get('outputfile', None)
+
+# read env-variables
+confdir = os.getenv('FEED_FILTER_CONF',
+        os.path.join(os.getenv('HOME'), ".feedfilter"))
+debug_mode = os.getenv('DEBUG',  "False")
+
+# read configfile
+configs = configparser.ConfigParser()
+configs.read(os.path.join(confdir, 'feedfilter.conf'))
+# default settings
+treshhold = 1
+cmp_treshhold = 0.35
+title_scale = 2
+utils.silent = True
+outputfile = None
+for section in ['DEFAULT', sitename]:
+    if section in configs:
+        config = configs[section]
+    else:
+        pass
+    treshhold = float(config.get('treshhold', treshhold))
+    cmp_treshhold = float(config.get('cmp_treshhold', cmp_treshhold))
+    title_scale = float(config.get('title_scale', title_scale))
+    utils.silent = toBool(config.get('silent', utils.silent))
+    outputfile = config.get('outputfile', outputfile)
 if debug_mode == "dev":
     utils.silent = False
     outputfile = 'output.xml'
