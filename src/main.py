@@ -33,6 +33,7 @@ configs.read(os.path.join(confdir, 'feedfilter.conf'))
 treshhold = 1
 cmp_treshhold = 0.35
 title_scale = 2
+appendlvl = False
 utils.silent = True
 outputfile = None
 for section in ['DEFAULT', sitename]:
@@ -43,6 +44,7 @@ for section in ['DEFAULT', sitename]:
     treshhold = float(config.get('treshhold', treshhold))
     cmp_treshhold = float(config.get('cmp_treshhold', cmp_treshhold))
     title_scale = float(config.get('title_scale', title_scale))
+    appendlvl = toBool(config.get('appendlvl', appendlvl))
     utils.silent = toBool(config.get('silent', utils.silent))
     outputfile = config.get('outputfile', outputfile)
 if debug_mode == "dev":
@@ -95,8 +97,10 @@ for child in feed.get_items():
         warn("removing item!")
         feed.remove_item(child)
         del wordlists[gid]
-    else:
+    elif appendlvl:
         feed.append_description(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
+        if content != "":
+            feed.append_content(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
     log(lvl, title)
 
 if outputfile == None:
