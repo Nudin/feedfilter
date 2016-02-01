@@ -188,7 +188,7 @@ class Feed():
         """
         Appends the given text to the content
         """
-        self.set_conent(idindexorchild, self.get_content(idindexorchild) + text)
+        self.set_content(idindexorchild, self.get_content(idindexorchild) + text)
 
     def get_link(self, idindexorchild):
         """
