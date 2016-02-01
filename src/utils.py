@@ -1,4 +1,6 @@
 import sys
+import gettext
+from gettext import gettext as _
 
 def log(*objs):
     if silent:

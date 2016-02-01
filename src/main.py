@@ -8,11 +8,14 @@ import configparser
 from filter import Filter
 import utils
 from utils import *
+import gettext
+from gettext import gettext as _
+gettext.textdomain('feedfilter')
 
 
 # parse arguments and read feed from file/url
 if len(sys.argv) != 2:
-    warn("no file/url given")
+    warn(_("no file/url given"))
     exit(-1)
 if sys.argv[1][0:4] == "http":
     feedfile = urllib.request.urlopen(sys.argv[1])
@@ -75,8 +78,7 @@ for child in feed.get_items():
         t=comparetext.comp(wordlist, dic)
         if t>cmp_treshhold:
             feed.add_crosslink(index, link, title)
-            warn("removing duplicate: ", title)
-            warn("  is duplicate of: ", feed.get_title(index))
+            warn(_("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s") % {'duplicate':title, 'news':feed.get_title(index)})
             lvl=treshhold+1
             continue
     if lvl > treshhold:
@@ -92,7 +94,7 @@ for child in feed.get_items():
     elif summary != "":
         lvl += wordfilter.check(summary, 1)
     if lvl > treshhold:
-        warn("removing item!")
+        warn(_("removing item!"))
         feed.remove_item(child)
         del wordlists[gid]
     else:
