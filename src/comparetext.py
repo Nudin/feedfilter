@@ -17,7 +17,7 @@ for lang in os.listdir(filedir):
         filename = os.path.join(filedir, lang)
         common_words[lang] = open(filename, 'rU').read().split()
     except Exception:
-        logger.warn(_("Can't load file %s") % common_words[lang])
+        logging.warn(_("Can't load file %s") % common_words[lang])
         pass
 
 # we remove all special characters from the text before splitting it into words
