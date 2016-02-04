@@ -1,6 +1,8 @@
 import os
 import re
-from utils import *
+import logging
+import gettext
+from gettext import gettext as _
 
 class Filter():
     """
@@ -49,11 +51,10 @@ class Filter():
                         else:
                             self.blackwords[tmp[0].lower()]=float(tmp[1])
                     except:
-                        warn("Cannot parse line in", filename, ":")
-                        warn(line)
+                        logging.warn(_("Cannot parse line in %(filename)s:\n%(line)s") % {'filename':filename, 'line':line})
                         continue
         except IOError:
-            warn('error opening file:', filename)
+            logging.warn('error opening file:', filename)
 
     def check(self, text, multiplier=1):
         """

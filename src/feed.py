@@ -1,6 +1,8 @@
 import string
 import random
 import xml.etree.ElementTree as etree
+import gettext
+from gettext import gettext as _
 
 
 class Feed():
@@ -21,7 +23,7 @@ class Feed():
         elif self.root.tag == 'rss':
             self.format = 'rss'
         else:
-            print("Unknown feedformat!")
+            print(_("Unknown feedformat!"))
             exit
         self.marker = "<!--" + ''.join(random.choice(string.ascii_letters) for _ in range(12)) + "-->"
        
@@ -124,7 +126,7 @@ class Feed():
     def _insert_or_append(self, text, addition):
         p=text.find(self.marker)
         if p == -1:
-            text += "<br>Siehe auch:<ul><li>" + addition + "</li>" + self.marker + "<ul>"
+            text += _("<br>Similar News:<ul><li>%(link)s</li>%(marker)s</ul>") % {'link':addition, 'marker':self.marker}
         else:
             text = text[0:p] + "<li>" + addition + "</li>" + text[p:]
         return text
@@ -188,7 +190,7 @@ class Feed():
         """
         Appends the given text to the content
         """
-        self.set_conent(idindexorchild, self.get_content(idindexorchild) + text)
+        self.set_content(idindexorchild, self.get_content(idindexorchild) + text)
 
     def get_link(self, idindexorchild):
         """

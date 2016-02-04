@@ -1,18 +1,39 @@
 import sys
+import gettext
+from gettext import gettext as _
+import logging
+try:
+    import coloredlogs
+except ImportError:
+    pass
 
-def log(*objs):
-    if silent:
-        return
-    print("\033[0m", end="", flush=True)
-    print(*objs, file=sys.stderr)
-    print("\033[0m", end="", flush=True)
 
-def warn(*objs):
-    if silent:
-        return
-    print("\033[31m", end="", flush=True)
-    print(*objs, file=sys.stderr)
-    print("\033[0m", end="", flush=True)
+def setupLogger(filename, loglevel_file, loglevel_stderr):
+    if filename is not None:
+        fmt = '%(asctime)s [%(levelname)s] %(message)s'
+        date_fmt = '%Y-%m-%d %H:%M'
+
+        try:
+            consoleFormatter = coloredlogs.ColoredFormatter(fmt, date_fmt)
+        except NameError:
+            consoleFormatter = logging.Formatter(fmt, date_fmt)
+        consoleHandler = logging.StreamHandler()
+        consoleHandler.setLevel(loglevel_stderr)
+        consoleHandler.setFormatter(consoleFormatter)
+
+        fileFormatter = logging.Formatter(fmt, date_fmt)
+        fileHandler = logging.FileHandler(filename)
+        fileHandler.setLevel(loglevel_file)
+        fileHandler.setFormatter(fileFormatter)
+
+        logging.getLogger().setLevel(0)
+        logging.getLogger().addHandler(fileHandler)
+        logging.getLogger().addHandler(consoleHandler)
+    else:
+        try:
+            coloredlogs.install(fmt=fmt, datefmt=date_fmt, level=loglevel_stderr)
+        except NameError:
+            logging.basicConfig(format=fmt, datefmt=date_fmt, level=loglevel_stderr)
 
 def toBool(obj):
     if type(obj) is bool:

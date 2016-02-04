@@ -8,11 +8,15 @@ import configparser
 from filter import Filter
 import utils
 from utils import *
+import logging
+import gettext
+from gettext import gettext as _
+gettext.textdomain('feedfilter')
 
 
 # parse arguments and read feed from file/url
 if len(sys.argv) != 2:
-    warn("no file/url given")
+    logging.warn(_("no file/url given"))
     exit(-1)
 if sys.argv[1][0:4] == "http":
     feedfile = urllib.request.urlopen(sys.argv[1])
@@ -33,7 +37,10 @@ configs.read(os.path.join(confdir, 'feedfilter.conf'))
 treshhold = 1
 cmp_treshhold = 0.35
 title_scale = 2
-utils.silent = True
+logfile = None
+loglevel_file = 'INFO'
+loglevel_stderr = 'CRITICAL'
+appendlvl = False
 outputfile = None
 for section in ['DEFAULT', sitename]:
     if section in configs:
@@ -43,11 +50,17 @@ for section in ['DEFAULT', sitename]:
     treshhold = float(config.get('treshhold', treshhold))
     cmp_treshhold = float(config.get('cmp_treshhold', cmp_treshhold))
     title_scale = float(config.get('title_scale', title_scale))
-    utils.silent = toBool(config.get('silent', utils.silent))
+    logfile = config.get('logfile', logfile)
+    loglevel_file = config.get('loglevel', loglevel_file)
+    loglevel_stderr = config.get('verboselevel', loglevel_stderr)
+    appendlvl = toBool(config.get('appendlvl', appendlvl))
     outputfile = config.get('outputfile', outputfile)
 if debug_mode == "dev":
-    utils.silent = False
+    loglevel_file = 'DEBUG'
+    loglevel_stderr = 'DEBUG'
     outputfile = 'output.xml'
+
+utils.setupLogger(logfile, loglevel_file, loglevel_stderr)
 
 # read and parse filterfiles
 wordfilter = Filter(confdir)
@@ -75,8 +88,7 @@ for child in feed.get_items():
         t=comparetext.comp(wordlist, dic)
         if t>cmp_treshhold:
             feed.add_crosslink(index, link, title)
-            warn("removing duplicate: ", title)
-            warn("  is duplicate of: ", feed.get_title(index))
+            logging.warn(_("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s") % {'duplicate':title, 'news':feed.get_title(index)})
             lvl=treshhold+1
             continue
     if lvl > treshhold:
@@ -92,12 +104,14 @@ for child in feed.get_items():
     elif summary != "":
         lvl += wordfilter.check(summary, 1)
     if lvl > treshhold:
-        warn("removing item!")
+        logging.warn(_("removing item!"))
         feed.remove_item(child)
         del wordlists[gid]
-    else:
+    elif appendlvl:
         feed.append_description(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
-    log(lvl, title)
+        if content != "":
+            feed.append_content(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
+    logging.info(lvl, title)
 
 if outputfile == None:
     # Write output to console
