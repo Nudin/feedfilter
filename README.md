@@ -1,7 +1,7 @@
 Feedfilter
 ==========
 
-Feedfilter removes duplicated news and news you don't like from news-feeds.
+Feedfilter removes duplicated news and news you don't like from your news-feeds.
 
 
 ### Filtering ###
@@ -49,7 +49,7 @@ verboselevel = CRITICAL
 [somefeed]
 treshhold = 7
 ```
-The DEFAULT-section specifies the default configuration for all feed, alternatively or additionally you can specify different settings for single feeds. The name of the feed is the domain-name without TLD (WARNING: this might change in future due to limitations with different feeds on the same/similar domain).
+The DEFAULT-section specifies the default configuration for all feed, alternatively or additionally you can specify different settings for single feeds. The name of the feed is the domain-name without TLD (**Warning**: this might change in future due to limitations with different feeds on the same/similar domain).
 The currently available options are:
  * threshold – is this value is overstepped the newsitem will be dropped
  * title_scale – multiply the values of filterscores with this factor if matched in the headline
@@ -65,5 +65,5 @@ badword  2
 bad word group	10
 I like this  -5
 ```
-In the fist column you specify a word or word group to search in the news, in the second a score the news gets if the word (group) is found. The columns can be separated by tabs or multiple spaces. Higher values will cause a news-item to be deleted quicker, negative values are allowed. Each filter can only match once in the title and one in the body of the message, scoring values for matches in the title will be multiplied by title_scale.
-The search is case-insensitive *except* if the word (group) is less than 4 characters long or completely in UPPER CASE.
+In the fist column you specify a word or word group to search in the news, in the second a score the news gets if the word (group) is found. The columns can be separated by tabs or **multiple** spaces. Higher values will cause a news-item to be deleted quicker, negative values are allowed. Each filter can only match once in the title and one in the body of the message, scoring values for matches in the title will be multiplied by title_scale.
+The search is case-insensitive **except** if the word (group) is less than 4 characters long or completely in UPPER CASE.
