@@ -37,7 +37,7 @@ def setupLogger(filename, loglevel_file, loglevel_stderr):
 
 def toBool(obj):
     if type(obj) is bool:
-        return bool
+        return obj
     elif type(obj) is str:
         return obj.lower() == 'true'
     else:
