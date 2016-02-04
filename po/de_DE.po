@@ -1,0 +1,64 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-02-04 14:57+0100\n"
+"PO-Revision-Date: 2016-02-04 15:01+0100\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.6\n"
+"Last-Translator: Michael F. Schönitzer <michael@schoenitzer.de>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: de_DE\n"
+
+#: src/comparetext.py:19
+#, python-format
+msgid "Can't load file %s"
+msgstr "Datei %s kann nicht geöffnet werden."
+
+#: src/comparetext.py:52
+#, python-format
+msgid "No commonwords-list available for language %s"
+msgstr "Keine Liste der häufigsten Wörter für die Sprache %s vorhanden"
+
+#: src/main.py:18
+msgid "no file/url given"
+msgstr "Keine Datei/URL angegeben"
+
+#: src/main.py:81
+#, python-format
+msgid ""
+"removing news entry: %(duplicate)s\n"
+"\tas duplicate of: %(news)s"
+msgstr ""
+"Entferne Schlagzeile: %(duplicate)s\n"
+"\tals Duplikat von : %(news)s"
+
+#: src/main.py:97
+msgid "removing item!"
+msgstr "Entferne Schlagzeile!"
+
+#: src/feed.py:26
+msgid "Unknown feedformat!"
+msgstr "Unbekanntes Feed-Format!"
+
+#: src/feed.py:129
+#, python-format
+msgid "<br>Similar News:<ul><li>%(link)s</li>%(marker)s</ul>"
+msgstr "<br>Ähnliche Nachrichten:<ul><li>%(link)s</li>%(marker)s</ul>"
+
+#: src/filter.py:54
+#, python-format
+msgid ""
+"Cannot parse line in %(filename)s:\n"
+"%(line)s"
+msgstr ""
+"Fehler beim lesen der Datei %(filename)s in der Zeile:\n"
+"%(line)s"

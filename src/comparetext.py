@@ -5,6 +5,8 @@ from collections import Counter
 import re
 import utils
 import logging
+import gettext
+from gettext import gettext as _
 
 filedir = os.path.join(os.path.dirname(__file__), os.path.pardir,
                    "include", "commonwords")
@@ -15,7 +17,7 @@ for lang in os.listdir(filedir):
         filename = os.path.join(filedir, lang)
         common_words[lang] = open(filename, 'rU').read().split()
     except Exception:
-        logger.warn("Can't load file", common_words[lang])
+        logger.warn(_("Can't load file %s") % common_words[lang])
         pass
 
 # we remove all special characters from the text before splitting it into words
@@ -48,7 +50,7 @@ def analyse(lang, txt):
                 continue
         return wordlist
     else:
-        logging.warn("No commonwords-list available for language", lang)
+        logging.warn(_("No commonwords-list available for language %s") % lang)
         return wordlist
 
 def comp(dict_1, dict_2):
@@ -66,3 +68,4 @@ def comp_txt(txt_1, txt_2):
     dict_1=analyse(txt_1)
     dict_2=analyse(txt_2)
     return comp(dict_1, dict_2)
+
