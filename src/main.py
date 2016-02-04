@@ -111,7 +111,7 @@ for child in feed.get_items():
         feed.append_description(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
         if content != "":
             feed.append_content(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
-    logging.info(lvl, title)
+    logging.info(str(lvl) + " " + title)
 
 if outputfile == None:
     # Write output to console
