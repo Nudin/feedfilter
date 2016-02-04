@@ -51,8 +51,8 @@ debug_mode = os.getenv('DEBUG',  "False")
 configs = configparser.ConfigParser()
 configs.read(os.path.join(confdir, 'feedfilter.conf'))
 # default settings
-treshhold = 1
-cmp_treshhold = 0.35
+threshold = 1
+cmp_threshold = 0.35
 title_scale = 2
 logfile = None
 loglevel_file = 'INFO'
@@ -64,8 +64,8 @@ for section in ['DEFAULT', sitename]:
         config = configs[section]
     else:
         pass
-    treshhold = float(config.get('treshhold', treshhold))
-    cmp_treshhold = float(config.get('cmp_treshhold', cmp_treshhold))
+    threshold = float(config.get('threshold', threshold))
+    cmp_threshold = float(config.get('cmp_threshold', cmp_threshold))
     title_scale = float(config.get('title_scale', title_scale))
     logfile = config.get('logfile', logfile)
     loglevel_file = config.get('loglevel', loglevel_file)
@@ -103,12 +103,12 @@ for child in feed.get_items():
     wordlist=comparetext.analyse(lang, title + " " + summary + " " + content )
     for index, dic in wordlists.items():
         t=comparetext.comp(wordlist, dic)
-        if t>cmp_treshhold:
+        if t>cmp_threshold:
             feed.add_crosslink(index, link, title)
             logging.warn(_("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s") % {'duplicate':title, 'news':feed.get_title(index)})
-            lvl=treshhold+1
+            lvl=threshold+1
             continue
-    if lvl > treshhold:
+    if lvl > threshold:
         feed.remove_item(child)
         continue
     else:
@@ -120,7 +120,7 @@ for child in feed.get_items():
         lvl += wordfilter.check(content, 1)
     elif summary != "":
         lvl += wordfilter.check(summary, 1)
-    if lvl > treshhold:
+    if lvl > threshold:
         logging.warn(_("removing item!"))
         feed.remove_item(child)
         del wordlists[gid]
