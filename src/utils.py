@@ -36,6 +36,8 @@ def setupLogger(filename, loglevel_file, loglevel_stderr):
             logging.basicConfig(format=fmt, datefmt=date_fmt, level=loglevel_stderr)
 
 def toBool(obj):
+    if obj is None:
+        return None
     if type(obj) is bool:
         return obj
     elif type(obj) is str:
