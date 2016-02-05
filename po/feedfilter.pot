@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-04 14:56+0100\n"
+"POT-Creation-Date: 2016-02-05 18:45+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,41 +17,42 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/comparetext.py:19
+#: src/comparetext.py:36
 #, python-format
 msgid "Can't load file %s"
 msgstr ""
 
-#: src/comparetext.py:52
+#: src/comparetext.py:69
 #, python-format
 msgid "No commonwords-list available for language %s"
 msgstr ""
 
-#: src/main.py:18
+#: src/main.py:36
 msgid "no file/url given"
 msgstr ""
 
-#: src/main.py:81
+#: src/main.py:108
 #, python-format
 msgid ""
 "removing news entry: %(duplicate)s\n"
 "\tas duplicate of: %(news)s"
 msgstr ""
 
-#: src/main.py:97
-msgid "removing item!"
+#: src/main.py:124
+#, python-format
+msgid "removing item %(title)s with score %(score)i"
 msgstr ""
 
-#: src/feed.py:26
+#: src/feed.py:43
 msgid "Unknown feedformat!"
 msgstr ""
 
-#: src/feed.py:129
+#: src/feed.py:146
 #, python-format
 msgid "<br>Similar News:<ul><li>%(link)s</li>%(marker)s</ul>"
 msgstr ""
 
-#: src/filter.py:54
+#: src/filter.py:71
 #, python-format
 msgid ""
 "Cannot parse line in %(filename)s:\n"

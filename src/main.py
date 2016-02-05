@@ -121,7 +121,7 @@ for child in feed.get_items():
     elif summary != "":
         lvl += wordfilter.check(summary, 1)
     if lvl > threshold:
-        logging.warn(_("removing item!"))
+        logging.warn(_("removing item %(title)s with score %(score)i") % {'title':title, 'score':lvl})
         feed.remove_item(child)
         del wordlists[gid]
     elif appendlvl:
