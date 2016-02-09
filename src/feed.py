@@ -1,5 +1,5 @@
-#  
-#  feedfilter - remove duplicates and uninteresting stuff in news-feeds 
+#
+#  feedfilter - remove duplicates and uninteresting stuff in news-feeds
 #  Copyright (C) 2016 Michael F. Schoenitzer
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,6 @@
 import string
 import random
 import xml.etree.ElementTree as etree
-import gettext
 from gettext import gettext as _
 
 
@@ -42,8 +41,9 @@ class Feed():
         else:
             print(_("Unknown feedformat!"))
             exit
-        self.marker = "<!--" + ''.join(random.choice(string.ascii_letters) for _ in range(12)) + "-->"
-       
+        randomstr = ''.join(random.choice(string.ascii_letters) for _ in range(12))
+        self.marker = "<!--" + randomstr + "-->"
+
     def __get_child(self, idindexorchild):
         """
         Gets a child by an identifier
@@ -106,13 +106,12 @@ class Feed():
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
                 desc = child.find('{http://www.w3.org/2005/Atom}summary')
-                return desc.text 
+                return desc.text
             elif self.format == 'rss':
                 desc = child.find('description')
                 return desc.text.strip()
         except Exception:
             return ""
-
 
     def set_description(self, idindexorchild, text):
         """
@@ -133,21 +132,21 @@ class Feed():
         except Exception:
             pass
 
-
     def append_description(self, idindexorchild, text):
         """
         Appends the given text to the description
         """
-        self.set_description(idindexorchild, self.get_description(idindexorchild) + text)
+        self.set_description(idindexorchild,
+                             self.get_description(idindexorchild) + text)
 
     def _insert_or_append(self, text, addition):
-        p=text.find(self.marker)
+        p = text.find(self.marker)
         if p == -1:
-            text += _("<br>Similar News:<ul><li>%(link)s</li>%(marker)s</ul>") % {'link':addition, 'marker':self.marker}
+            text += _("<br>Similar News:<ul><li>%(link)s</li>%(marker)s</ul>") % \
+                      {'link': addition, 'marker': self.marker}
         else:
             text = text[0:p] + "<li>" + addition + "</li>" + text[p:]
         return text
-
 
     def add_crosslink(self, idindexorchild, link, title):
         """
@@ -160,8 +159,7 @@ class Feed():
 
         cont = self.get_content(idindexorchild)
         if cont != "":
-            self.set_content(idindexorchild, self._insert_or_append(cont, fulllink ))
-
+            self.set_content(idindexorchild, self._insert_or_append(cont, fulllink))
 
     def get_content(self, idindexorchild):
         """
@@ -178,7 +176,6 @@ class Feed():
         except Exception:
             return ""
 
-
     def set_content(self, idindexorchild, text):
         """
         Appends the given text to the content
@@ -193,8 +190,8 @@ class Feed():
                         new = etree.fromstring(text)
                 except etree.ParseError:
                         new = etree.fromstring('<div>' + text + '</div>')
-                [c.remove(i) for i in list(c)]
-                c.append(new)
+                [cont.remove(i) for i in list(cont)]
+                cont.append(new)
             elif self.format == 'rss':
                 cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
                 if cont is None:
@@ -219,10 +216,10 @@ class Feed():
                 link = child.find('{http://www.w3.org/2005/Atom}link')
                 return link.attrib['href']
             elif self.format == 'rss':
-                link =  child.find('link')
+                link = child.find('link')
                 return link.text.strip()
         except Exception:
-            # This should never happen, handling necessary? 
+            # This should never happen, handling necessary?
             return ""
 
     def get_id(self, idindexorchild):
@@ -235,10 +232,10 @@ class Feed():
                 gid = child.find('{http://www.w3.org/2005/Atom}id')
                 return gid.text
             elif self.format == 'rss':
-                gid =  child.find('guid')
+                gid = child.find('guid')
                 return gid.text.strip()
         except Exception:
-            # This should never happen, handling necessary? 
+            # This should never happen, handling necessary?
             return ""
 
     def remove_item(self, idindexorchild):
@@ -256,7 +253,7 @@ class Feed():
         Write the feed to a file
         """
         if self.format == 'atom':
-           etree.register_namespace('', 'http://www.w3.org/2005/Atom')
+            etree.register_namespace('', 'http://www.w3.org/2005/Atom')
         self.tree.write(filename, encoding="UTF-8", xml_declaration=True)
 
     def print(self):
@@ -264,4 +261,3 @@ class Feed():
         Write the feed to stdout
         """
         self.write(1)
-

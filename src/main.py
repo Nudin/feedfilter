@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-#  
-#  feedfilter - remove duplicates and uninteresting stuff in news-feeds 
+#
+#  feedfilter - remove duplicates and uninteresting stuff in news-feeds
 #  Copyright (C) 2016 Michael F. Schoenitzer
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -37,14 +37,14 @@ if len(sys.argv) != 2:
     exit(-1)
 if sys.argv[1][0:4] == "http":
     feedfile = urllib.request.urlopen(sys.argv[1])
-    sitename= sys.argv[1].split('.')[1]
+    sitename = sys.argv[1].split('.')[1]
 else:
     feedfile = sys.argv[1]
 
 
 # read env-variables
 confdir = os.getenv('FEED_FILTER_CONF',
-        os.path.join(os.getenv('HOME'), ".feedfilter"))
+                    os.path.join(os.getenv('HOME'), ".feedfilter"))
 debug_mode = os.getenv('DEBUG',  "False")
 
 # read configfile
@@ -89,24 +89,25 @@ if 'sitename' in locals():
 feed = Feed(feedfile)
 lang = feed.get_lang()
 
-wordlists={}
-for child in feed.get_items(): 
+wordlists = {}
+for child in feed.get_items():
     title = feed.get_title(child)
     summary = feed.get_description(child)
     content = feed.get_content(child)
     link = feed.get_link(child)
     gid = feed.get_id(child)
 
-    lvl=0
+    lvl = 0
 
     # Check for duplicates
-    wordlist=comparetext.analyse(lang, title + " " + summary + " " + content )
+    wordlist = comparetext.analyse(lang, title + " " + summary + " " + content)
     for index, dic in wordlists.items():
-        t=comparetext.comp(wordlist, dic)
-        if t>cmp_threshold:
+        t = comparetext.comp(wordlist, dic)
+        if t > cmp_threshold:
             feed.add_crosslink(index, link, title)
-            logging.warn(_("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s") % {'duplicate':title, 'news':feed.get_title(index)})
-            lvl=threshold+1
+            logging.warn(_("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s") %
+                         {'duplicate': title, 'news': feed.get_title(index)})
+            lvl = threshold+1
             continue
     if lvl > threshold:
         feed.remove_item(child)
@@ -115,13 +116,14 @@ for child in feed.get_items():
         wordlists[gid] = wordlist
 
     # Check against blackwords
-    lvl  = wordfilter.check(title, title_scale)
+    lvl = wordfilter.check(title, title_scale)
     if content != "":
         lvl += wordfilter.check(content, 1)
     elif summary != "":
         lvl += wordfilter.check(summary, 1)
     if lvl > threshold:
-        logging.warn(_("removing item %(title)s with score %(score)i") % {'title':title, 'score':lvl})
+        logging.warn(_("removing item %(title)s with score %(score)i") %
+                     {'title': title, 'score': lvl})
         feed.remove_item(child)
         del wordlists[gid]
     elif appendlvl:
@@ -130,10 +132,9 @@ for child in feed.get_items():
             feed.append_content(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
     logging.info(str(lvl) + " " + title)
 
-if outputfile == None:
+if outputfile is None:
     # Write output to console
     feed.print()
 else:
     # Write output to file
     feed.write(outputfile)
-

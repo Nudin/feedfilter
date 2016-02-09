@@ -1,5 +1,5 @@
-#  
-#  feedfilter - remove duplicates and uninteresting stuff in news-feeds 
+#
+#  feedfilter - remove duplicates and uninteresting stuff in news-feeds
 #  Copyright (C) 2016 Michael F. Schoenitzer
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -18,14 +18,14 @@
 import os
 import re
 import logging
-import gettext
 from gettext import gettext as _
+
 
 class Filter():
     """
     Match a set of blacklisted words against a text
     """
-    
+
     def __init__(self, filterdir):
         """
         Initialise the filter
@@ -34,8 +34,7 @@ class Filter():
         """
         self.blackwords = {}
         self.exactblackwords = {}
-        self.filterdir=filterdir
-
+        self.filterdir = filterdir
 
     def read_filterlist(self, filename):
         """
@@ -61,14 +60,15 @@ class Filter():
                         continue
                     if len(line) <= 1:
                         continue
-                    tmp=c.sub('\t', line.strip()).split('\t')
+                    tmp = c.sub('\t', line.strip()).split('\t')
                     try:
                         if len(tmp[0]) <= 3 or tmp[0].isupper():
-                            self.exactblackwords[tmp[0]]=float(tmp[1])
+                            self.exactblackwords[tmp[0]] = float(tmp[1])
                         else:
-                            self.blackwords[tmp[0].lower()]=float(tmp[1])
+                            self.blackwords[tmp[0].lower()] = float(tmp[1])
                     except:
-                        logging.warn(_("Cannot parse line in %(filename)s:\n%(line)s") % {'filename':filename, 'line':line})
+                        logging.warn(_("Cannot parse line in %(filename)s:\n%(line)s") %
+                                     {'filename': filename, 'line': line})
                         continue
         except IOError:
             logging.warn('error opening file:', filename)
@@ -80,7 +80,7 @@ class Filter():
         text: the string the filter should be matched against
         multiplier: multiply the weight of all matching filters with this constant
         """
-        ltext=text.lower()
+        ltext = text.lower()
         lvl = 0
         for word in self.blackwords:
             if ltext.find(word) != -1:
@@ -89,4 +89,3 @@ class Filter():
             if text.find(word) != -1:
                 lvl += multiplier*self.exactblackwords[word]
         return lvl
-
