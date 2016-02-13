@@ -45,7 +45,8 @@ re_filters = ['\d+$', '\w$', '[A-Z][a-z]{1,2}$']
 compiled_re_filters = (re.compile(i) for i in re_filters)
 
 
-def analyse(lang, txt):
+def analyse(lang, *txt):
+    txt = ' '.join([*txt])
     txt = specialchar_filter.sub('', txt)
 
     wordlist = Counter(txt.split())

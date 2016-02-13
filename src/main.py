@@ -99,7 +99,7 @@ for child in feed:
 
     # Check for duplicates
     maxcmplvl = 0
-    wordlist = comparetext.analyse(lang, title + " " + summary + " " + content)
+    wordlist = comparetext.analyse(lang, title, summary, content)
     for index, dic in wordlists.items():
         t = comparetext.comp(wordlist, dic)
         maxcmplvl = max(maxcmplvl, t)
@@ -126,9 +126,11 @@ for child in feed:
         feed.remove_item(child)
         del wordlists[gid]
     elif appendlvl:
-        feed.append_description(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
+        appendstr = "<br><small><small>lvl: %.2g &nbsp;" % lvl + \
+                    "maxcmplvl: %.2f</small></small>" % maxcmplvl
+        feed.append_description(child, appendstr)
         if content != "":
-            feed.append_content(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
+            feed.append_content(child, appendstr)
     logging.info("%.2g %.2f " % (lvl, maxcmplvl) + title)
 
 if outputfile is None:
