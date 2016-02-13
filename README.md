@@ -15,6 +15,10 @@ The threshold of the detection can be configured.
 
 ### Installation ###
 
+Dependencies:
+* Python3 (tested with Python 3.5 but should work with 3.1 and newer)
+* optional: coloredlogs (for prettier debugging output)
+
 Get feedfilter via git:
 ```
 git clone https://github.com/Nudin/feedfilter.git
