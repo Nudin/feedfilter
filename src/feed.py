@@ -61,15 +61,14 @@ class Feed():
         else:
             return idindexorchild
 
-    def get_items(self):
+    def __iter__(self):
         """
         Get all news-items in the feed
-        returns an array
         """
         if self.format == 'atom':
-            return self.root.findall('{http://www.w3.org/2005/Atom}entry')
+            return iter(self.root.findall('{http://www.w3.org/2005/Atom}entry'))
         elif self.format == 'rss':
-            return self.root.find('channel').findall('item')
+            return iter(self.root.find('channel').findall('item'))
 
     def get_lang(self):
         """

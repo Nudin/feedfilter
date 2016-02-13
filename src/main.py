@@ -90,7 +90,7 @@ feed = Feed(feedfile)
 lang = feed.get_lang()
 
 wordlists = {}
-for child in feed.get_items():
+for child in feed:
     title = feed.get_title(child)
     summary = feed.get_description(child)
     content = feed.get_content(child)
