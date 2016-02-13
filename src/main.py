@@ -67,6 +67,7 @@ for section in configs:
         config = configs[section]
     elif url.find(section) != -1:
         config = configs[section]
+        sitename = config.get('sitename', sitename)
     else:
         continue
     threshold = float(config.get('threshold', threshold))
