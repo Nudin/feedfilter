@@ -53,9 +53,9 @@ class Feed():
             * the id of the child
         """
         if type(idindexorchild) is int:
-            return self.get_items()[idindexorchild]
+            return list(self)[idindexorchild]
         elif type(idindexorchild) is str:
-            for child in self.get_items():
+            for child in self:
                 if self.get_id(child) == idindexorchild:
                     return child
         else:
