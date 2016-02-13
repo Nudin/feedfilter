@@ -62,18 +62,13 @@ loglevel_file = 'INFO'
 loglevel_stderr = 'CRITICAL'
 appendlvl = False
 outputfile = None
-for section in ['DEFAULT', url]:
-    if section in configs:
+for section in configs:
+    if section == 'DEFAULT':
+        config = configs[section]
+    elif url.find(section) != -1:
         config = configs[section]
     else:
-        c = itertools.filterfalse(lambda x: section.find(x) == -1, configs)
-        try:
-            cs = next(c)
-            if cs == 'DEFAULT':
-                cs = next(c)
-            config = configs[cs]
-        except StopIteration:
-            pass
+        continue
     threshold = float(config.get('threshold', threshold))
     cmp_threshold = float(config.get('cmp_threshold', cmp_threshold))
     title_scale = float(config.get('title_scale', title_scale))
