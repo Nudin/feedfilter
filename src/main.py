@@ -97,19 +97,18 @@ for child in feed:
     link = feed.get_link(child)
     gid = feed.get_id(child)
 
-    lvl = 0
-
     # Check for duplicates
+    maxcmplvl = 0
     wordlist = comparetext.analyse(lang, title + " " + summary + " " + content)
     for index, dic in wordlists.items():
         t = comparetext.comp(wordlist, dic)
+        maxcmplvl = max(maxcmplvl, t)
         if t > cmp_threshold:
             feed.add_crosslink(index, link, title)
             logging.warn(_("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s") %
                          {'duplicate': title, 'news': feed.get_title(index)})
-            lvl = threshold+1
             continue
-    if lvl > threshold:
+    if maxcmplvl > threshold:
         feed.remove_item(child)
         continue
     else:
@@ -130,7 +129,7 @@ for child in feed:
         feed.append_description(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
         if content != "":
             feed.append_content(child, "<br><br><small>lvl: " + str(lvl) + "</small>")
-    logging.info(str(lvl) + " " + title)
+    logging.info("%.2g %.2f " % (lvl, maxcmplvl) + title)
 
 if outputfile is None:
     # Write output to console
