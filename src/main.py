@@ -23,6 +23,7 @@ import comparetext
 from feed import Feed
 import configparser
 from filter import Filter
+import itertools
 import utils
 from utils import *
 import logging
@@ -35,12 +36,13 @@ gettext.textdomain('feedfilter')
 if len(sys.argv) != 2:
     logging.warn(_("no file/url given"))
     exit(-1)
-if sys.argv[1][0:4] == "http":
-    feedfile = urllib.request.urlopen(sys.argv[1])
-    sitename = sys.argv[1].split('.')[1]
+url = sys.argv[1]
+if url[0:4] == "http":
+    feedfile = urllib.request.urlopen(url)
+    sitename = url.split('/')[1]
 else:
-    feedfile = sys.argv[1]
-    sitename = sys.argv[1].split('.')[0]
+    feedfile = url
+    sitename = url.split('.')[0]
 
 
 # read env-variables
@@ -60,11 +62,18 @@ loglevel_file = 'INFO'
 loglevel_stderr = 'CRITICAL'
 appendlvl = False
 outputfile = None
-for section in ['DEFAULT', sitename]:
+for section in ['DEFAULT', url]:
     if section in configs:
         config = configs[section]
     else:
-        pass
+        c = itertools.filterfalse(lambda x: section.find(x) == -1, configs)
+        try:
+            cs = next(c)
+            if cs == 'DEFAULT':
+                cs = next(c)
+            config = configs[cs]
+        except StopIteration:
+            pass
     threshold = float(config.get('threshold', threshold))
     cmp_threshold = float(config.get('cmp_threshold', cmp_threshold))
     title_scale = float(config.get('title_scale', title_scale))

@@ -71,7 +71,7 @@ class Filter():
                                      {'filename': filename, 'line': line})
                         continue
         except IOError:
-            logging.warn('error opening file:', filename)
+            logging.warn('error opening file: ' + filename)
 
     def check(self, text, multiplier=1):
         """
