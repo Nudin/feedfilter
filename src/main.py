@@ -39,7 +39,7 @@ if len(sys.argv) != 2:
 url = sys.argv[1]
 if url[0:4] == "http":
     feedfile = urllib.request.urlopen(url)
-    sitename = url.split('/')[1]
+    sitename = url.split('/')[2]
 else:
     feedfile = url
     sitename = url.split('.')[0]
@@ -93,7 +93,8 @@ if 'sitename' in locals():
 
 # Parse feed
 feed = Feed(feedfile)
-lang = feed.get_lang()
+# For now we use the language without any regional variants
+lang = feed.get_lang().split('-')[0]
 
 wordlists = {}
 for child in feed:
