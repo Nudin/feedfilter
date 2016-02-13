@@ -40,6 +40,7 @@ if sys.argv[1][0:4] == "http":
     sitename = sys.argv[1].split('.')[1]
 else:
     feedfile = sys.argv[1]
+    sitename = sys.argv[1].split('.')[0]
 
 
 # read env-variables
