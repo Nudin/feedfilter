@@ -64,17 +64,22 @@ def analyse(lang, *txt):
                 del wordlist[word]
             except KeyError:
                 continue
-        return wordlist
     else:
         logging.warn(_("No commonwords-list available for language %s") % lang)
-        return wordlist
+
+    norm = math.sqrt(sum(value*value*len(key) for key, value in wordlist.items()))
+
+    return (wordlist, norm)
 
 
 def comp(dict_1, dict_2):
-    norm_1 = math.sqrt(sum(dict_1[key]*dict_1[key]*len(key) for key in dict_1))
-    norm_2 = math.sqrt(sum(dict_2[key]*dict_2[key]*len(key) for key in dict_2))
+    dict_1, norm_1 = dict_1
+    dict_2, norm_2 = dict_2
 
-    sp = sum(dict_1[key]*dict_2.get(key, 0)*len(key) for key in dict_1)
+    if len(dict_1) < len(dict_2):
+        sp = sum(value*dict_2.get(key, 0)*len(key) for key, value in dict_1.items())
+    else:
+        sp = sum(value*dict_1.get(key, 0)*len(key) for key, value in dict_2.items())
     n = norm_1*norm_2
     if n == 0:
         return 0
