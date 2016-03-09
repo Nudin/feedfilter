@@ -115,7 +115,7 @@ for child in feed:
             logging.warn(_("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s") %
                          {'duplicate': title, 'news': feed.get_title(index)})
             continue
-    if maxcmplvl > threshold:
+    if maxcmplvl > cmp_threshold:
         feed.remove_item(child)
         continue
     else:
