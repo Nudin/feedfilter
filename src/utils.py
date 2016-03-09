@@ -15,41 +15,6 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from gettext import gettext as _
-import logging
-try:
-    import coloredlogs
-except ImportError:
-    pass
-import settings
-
-
-def setupLogger():
-    if settings.logfile is not None:
-        fmt = '%(asctime)s [%(levelname)s] %(message)s'
-        date_fmt = '%Y-%m-%d %H:%M'
-
-        try:
-            consoleFormatter = coloredlogs.ColoredFormatter(fmt, date_fmt)
-        except NameError:
-            consoleFormatter = logging.Formatter(fmt, date_fmt)
-        consoleHandler = logging.StreamHandler()
-        consoleHandler.setLevel(settings.loglevel_stderr)
-        consoleHandler.setFormatter(consoleFormatter)
-
-        fileFormatter = logging.Formatter(fmt, date_fmt)
-        fileHandler = logging.FileHandler(settings.logfile)
-        fileHandler.setLevel(settings.loglevel_file)
-        fileHandler.setFormatter(fileFormatter)
-
-        logging.getLogger().setLevel(0)
-        logging.getLogger().addHandler(fileHandler)
-        logging.getLogger().addHandler(consoleHandler)
-    else:
-        try:
-            coloredlogs.install(fmt=fmt, datefmt=date_fmt, level=settings.loglevel_stderr)
-        except NameError:
-            logging.basicConfig(format=fmt, datefmt=date_fmt, level=settings.loglevel_stderr)
 
 
 def toBool(obj):

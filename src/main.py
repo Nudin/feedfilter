@@ -24,15 +24,17 @@ from feed import Feed
 from filter import Filter
 import logging
 import settings
-import utils
+import logger
 
 # setup gettext
 gettext.textdomain('feedfilter')
 
+# parse commandline arguments and settingsfile
 feedfile = settings.read_argv()
 settings.read_settings()
 
-utils.setupLogger()
+# Start Logger
+logger.setupLogger()
 
 # read and parse filterfiles
 wordfilter = Filter()
