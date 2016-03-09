@@ -17,6 +17,7 @@
 #
 import string
 import random
+import re
 import xml.etree.ElementTree as etree
 from gettext import gettext as _
 
@@ -85,6 +86,7 @@ class Feed():
         except Exception:
             return ""
 
+
     def get_title(self, idindexorchild):
         """
         Get the title of a news-item
@@ -99,6 +101,21 @@ class Feed():
                 return title.text.strip()
         except Exception:
             return ""
+
+    def set_title(self, idindexorchild, newtitle):
+        """
+        Set the title of a news-item
+        """
+        try:
+            child = self.__get_child(idindexorchild)
+            if self.format == 'atom':
+                title = child.find('{%s}title' % self.atom_url)
+                title.text = newtitle
+            elif self.format == 'rss':
+                title = child.find('title')
+                title.text = newtitle
+        except Exception:
+            pass
 
     def get_description(self, idindexorchild):
         """
@@ -162,6 +179,12 @@ class Feed():
         cont = self.get_content(idindexorchild)
         if cont != "":
             self.set_content(idindexorchild, self._insert_or_append(cont, fulllink))
+        title = self.get_title(idindexorchild)
+        if re.match('\[\+\d\]', title[-4:]):
+            num = int(title[-2]) + 1 
+            self.set_title(idindexorchild, title[:-4] + '[+%i]' % num)
+        else:
+            self.set_title(idindexorchild, title + ' [+1]')
 
     def get_content(self, idindexorchild):
         """
