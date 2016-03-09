@@ -18,8 +18,6 @@
 #
 import gettext
 from gettext import gettext as _
-import sys
-import urllib.request
 
 import comparetext
 from feed import Feed
@@ -31,17 +29,8 @@ import utils
 # setup gettext
 gettext.textdomain('feedfilter')
 
-# parse arguments and read feed from file/url
-if len(sys.argv) != 2:
-    logging.warn(_("no file/url given"))
-    exit(-1)
-url = sys.argv[1]
-if url[0:4] == "http":
-    feedfile = urllib.request.urlopen(url)
-else:
-    feedfile = url
-
-settings.read_settings(url)
+feedfile = settings.read_argv()
+settings.read_settings()
 
 utils.setupLogger()
 

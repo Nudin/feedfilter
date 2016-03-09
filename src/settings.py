@@ -1,9 +1,29 @@
+from gettext import gettext as _
 import configparser
 import os
+import sys
+import urllib.request
+
 import utils
 
 
-def read_settings(url):
+# parse arguments and read feed from file/url
+def read_argv():
+    global url, sitename
+    if len(sys.argv) != 2:
+        print(_("no file/url given"))
+        exit(-1)
+    url = sys.argv[1]
+    if url[0:4] == "http":
+        feedfile = urllib.request.urlopen(url)
+        sitename = url.split('/')[2]
+    else:
+        feedfile = url
+        sitename = url.split('.')[0]
+    return feedfile
+
+
+def read_settings():
     global sitename
     global logfile, loglevel_file, loglevel_stderr, appendlvl
     global confdir, outputfile
@@ -25,10 +45,6 @@ def read_settings(url):
     loglevel_stderr = 'CRITICAL'
     appendlvl = False
     outputfile = None
-    if url[0:4] == "http":
-        sitename = url.split('/')[2]
-    else:
-        sitename = url.split('.')[0]
     for section in configs:
         if section == 'DEFAULT':
             config = configs[section]
