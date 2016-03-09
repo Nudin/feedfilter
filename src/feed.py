@@ -25,6 +25,9 @@ class Feed():
     """
     Parse and modify an Atom or RSS-Feed
     """
+    atom_url = 'http://www.w3.org/2005/Atom'
+    rss_url = 'http://purl.org/rss/1.0/modules/content/'
+    xml_rul = 'https://www.w3.org/XML/1998/namespace'
 
     def __init__(self, feedfile):
         """
@@ -34,7 +37,7 @@ class Feed():
         """
         self.tree = etree.parse(feedfile)
         self.root = self.tree.getroot()
-        if self.root.tag == '{http://www.w3.org/2005/Atom}feed':
+        if self.root.tag == '{%s}feed' % self.atom_url:
             self.format = 'atom'
         elif self.root.tag == 'rss':
             self.format = 'rss'
@@ -66,7 +69,7 @@ class Feed():
         Get all news-items in the feed
         """
         if self.format == 'atom':
-            return iter(self.root.findall('{http://www.w3.org/2005/Atom}entry'))
+            return iter(self.root.findall('{%s}entry' % self.atom_url))
         elif self.format == 'rss':
             return iter(self.root.find('channel').findall('item'))
 
@@ -76,7 +79,7 @@ class Feed():
         """
         try:
             if self.format == 'atom':
-                return self.root.attrib['{http://www.w3.org/XML/1998/namespace}lang'].lower()
+                return self.root.attrib['{%s}lang' % self.xml_url].lower()
             elif self.format == 'rss':
                 return self.root.find('channel').find('language').text.lower()
         except Exception:
@@ -89,7 +92,7 @@ class Feed():
         try:
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
-                title = child.find('{http://www.w3.org/2005/Atom}title')
+                title = child.find('{%s}title' % self.atom_url)
                 return title.text
             elif self.format == 'rss':
                 title = child.find('title')
@@ -104,7 +107,7 @@ class Feed():
         try:
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
-                desc = child.find('{http://www.w3.org/2005/Atom}summary')
+                desc = child.find('{%s}summary' % self.atom_url)
                 return desc.text
             elif self.format == 'rss':
                 desc = child.find('description')
@@ -119,9 +122,9 @@ class Feed():
         try:
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
-                desc = child.find('{http://www.w3.org/2005/Atom}summary')
+                desc = child.find('{%s}summary' % self.atom_url)
                 if desc is None:
-                    desc = etree.SubElement(child, '{http://www.w3.org/2005/Atom}summary')
+                    desc = etree.SubElement(child, '{%s}summary' % self.atom_url)
                 desc.text = text
             elif self.format == 'rss':
                 desc = child.find('description')
@@ -167,10 +170,10 @@ class Feed():
         try:
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
-                cont = child.find('{http://www.w3.org/2005/Atom}content')
+                cont = child.find('{%s}content' % self.atom_url)
                 return ''.join([etree.tostring(i).decode() for i in list(cont)])
             elif self.format == 'rss':
-                cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
+                cont = child.find('{%s}encoded' % self.rss_url)
                 return cont.text.strip()
         except Exception:
             return ""
@@ -182,9 +185,9 @@ class Feed():
         try:
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
-                cont = child.find('{http://www.w3.org/2005/Atom}content')
+                cont = child.find('{%s}content' % self.atom_url)
                 if cont is None:
-                    cont = etree.SubElement(child, '{http://www.w3.org/2005/Atom}content')
+                    cont = etree.SubElement(child, '{%s}content' % self.atom_url)
                 try:
                         new = etree.fromstring(text)
                 except etree.ParseError:
@@ -192,9 +195,9 @@ class Feed():
                 [cont.remove(i) for i in list(cont)]
                 cont.append(new)
             elif self.format == 'rss':
-                cont = child.find('{http://purl.org/rss/1.0/modules/content/}encoded')
+                cont = child.find('{%s}encoded' % self.rss_url)
                 if cont is None:
-                    cont = etree.SubElement(child, '{http://purl.org/rss/1.0/modules/content/}encoded')
+                    cont = etree.SubElement(child, '{%s}encoded' % self.rss_url)
                 cont.text = text
         except Exception:
             pass
@@ -212,7 +215,7 @@ class Feed():
         try:
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
-                link = child.find('{http://www.w3.org/2005/Atom}link')
+                link = child.find('{%s}link' % self.atom_url)
                 return link.attrib['href']
             elif self.format == 'rss':
                 link = child.find('link')
@@ -228,7 +231,7 @@ class Feed():
         try:
             child = self.__get_child(idindexorchild)
             if self.format == 'atom':
-                gid = child.find('{http://www.w3.org/2005/Atom}id')
+                gid = child.find('{%s}id' % self.atom_url)
                 return gid.text
             elif self.format == 'rss':
                 gid = child.find('guid')
@@ -252,7 +255,7 @@ class Feed():
         Write the feed to a file
         """
         if self.format == 'atom':
-            etree.register_namespace('', 'http://www.w3.org/2005/Atom')
+            etree.register_namespace('', self.atom_url)
         self.tree.write(filename, encoding="UTF-8", xml_declaration=True)
 
     def print(self):
