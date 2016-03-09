@@ -21,10 +21,11 @@ try:
     import coloredlogs
 except ImportError:
     pass
+import settings
 
 
-def setupLogger(filename, loglevel_file, loglevel_stderr):
-    if filename is not None:
+def setupLogger():
+    if settings.logfile is not None:
         fmt = '%(asctime)s [%(levelname)s] %(message)s'
         date_fmt = '%Y-%m-%d %H:%M'
 
@@ -33,12 +34,12 @@ def setupLogger(filename, loglevel_file, loglevel_stderr):
         except NameError:
             consoleFormatter = logging.Formatter(fmt, date_fmt)
         consoleHandler = logging.StreamHandler()
-        consoleHandler.setLevel(loglevel_stderr)
+        consoleHandler.setLevel(settings.loglevel_stderr)
         consoleHandler.setFormatter(consoleFormatter)
 
         fileFormatter = logging.Formatter(fmt, date_fmt)
-        fileHandler = logging.FileHandler(filename)
-        fileHandler.setLevel(loglevel_file)
+        fileHandler = logging.FileHandler(settings.logfile)
+        fileHandler.setLevel(settings.loglevel_file)
         fileHandler.setFormatter(fileFormatter)
 
         logging.getLogger().setLevel(0)
@@ -46,9 +47,9 @@ def setupLogger(filename, loglevel_file, loglevel_stderr):
         logging.getLogger().addHandler(consoleHandler)
     else:
         try:
-            coloredlogs.install(fmt=fmt, datefmt=date_fmt, level=loglevel_stderr)
+            coloredlogs.install(fmt=fmt, datefmt=date_fmt, level=settings.loglevel_stderr)
         except NameError:
-            logging.basicConfig(format=fmt, datefmt=date_fmt, level=loglevel_stderr)
+            logging.basicConfig(format=fmt, datefmt=date_fmt, level=settings.loglevel_stderr)
 
 
 def toBool(obj):

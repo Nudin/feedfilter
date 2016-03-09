@@ -15,10 +15,12 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+from gettext import gettext as _
+import logging
 import os
 import re
-import logging
-from gettext import gettext as _
+
+import settings
 
 
 class Filter():
@@ -26,7 +28,7 @@ class Filter():
     Match a set of blacklisted words against a text
     """
 
-    def __init__(self, filterdir):
+    def __init__(self):
         """
         Initialise the filter
 
@@ -34,7 +36,7 @@ class Filter():
         """
         self.blackwords = {}
         self.exactblackwords = {}
-        self.filterdir = filterdir
+        self.filterdir = settings.confdir
 
     def read_filterlist(self, filename):
         """

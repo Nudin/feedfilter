@@ -16,21 +16,20 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import urllib.request
-import sys
-import os
-import comparetext
-from feed import Feed
-import configparser
-from filter import Filter
-import itertools
-import utils
-from utils import *
-import logging
 import gettext
 from gettext import gettext as _
-gettext.textdomain('feedfilter')
+import sys
+import urllib.request
 
+import comparetext
+from feed import Feed
+from filter import Filter
+import logging
+import settings
+import utils
+
+# setup gettext
+gettext.textdomain('feedfilter')
 
 # parse arguments and read feed from file/url
 if len(sys.argv) != 2:
@@ -39,57 +38,17 @@ if len(sys.argv) != 2:
 url = sys.argv[1]
 if url[0:4] == "http":
     feedfile = urllib.request.urlopen(url)
-    sitename = url.split('/')[2]
 else:
     feedfile = url
-    sitename = url.split('.')[0]
 
+settings.read_settings(url)
 
-# read env-variables
-confdir = os.getenv('FEED_FILTER_CONF',
-                    os.path.join(os.getenv('HOME'), ".feedfilter"))
-debug_mode = os.getenv('DEBUG',  "False")
-
-# read configfile
-configs = configparser.ConfigParser()
-configs.read(os.path.join(confdir, 'feedfilter.conf'))
-# default settings
-threshold = 1
-cmp_threshold = 0.35
-title_scale = 2
-logfile = None
-loglevel_file = 'INFO'
-loglevel_stderr = 'CRITICAL'
-appendlvl = False
-outputfile = None
-for section in configs:
-    if section == 'DEFAULT':
-        config = configs[section]
-    elif url.find(section) != -1:
-        config = configs[section]
-        sitename = config.get('sitename', sitename)
-    else:
-        continue
-    threshold = float(config.get('threshold', threshold))
-    cmp_threshold = float(config.get('cmp_threshold', cmp_threshold))
-    title_scale = float(config.get('title_scale', title_scale))
-    logfile = config.get('logfile', logfile)
-    loglevel_file = config.get('loglevel', loglevel_file)
-    loglevel_stderr = config.get('verboselevel', loglevel_stderr)
-    appendlvl = toBool(config.get('appendlvl', appendlvl))
-    outputfile = config.get('outputfile', outputfile)
-if debug_mode == "dev":
-    loglevel_file = 'DEBUG'
-    loglevel_stderr = 'DEBUG'
-    outputfile = 'output.xml'
-
-utils.setupLogger(logfile, loglevel_file, loglevel_stderr)
+utils.setupLogger()
 
 # read and parse filterfiles
-wordfilter = Filter(confdir)
+wordfilter = Filter()
 wordfilter.read_filterlist('./blackwordlist.txt')
-if 'sitename' in locals():
-    wordfilter.read_filterlist(sitename)
+wordfilter.read_filterlist(settings.sitename)
 
 # Parse feed
 feed = Feed(feedfile)
@@ -110,29 +69,29 @@ for child in feed:
     for index, dic in wordlists.items():
         t = comparetext.comp(wordlist, dic)
         maxcmplvl = max(maxcmplvl, t)
-        if t > cmp_threshold:
+        if t > settings.cmp_threshold:
             feed.add_crosslink(index, link, title)
             logging.warn(_("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s") %
                          {'duplicate': title, 'news': feed.get_title(index)})
             continue
-    if maxcmplvl > cmp_threshold:
+    if maxcmplvl > settings.cmp_threshold:
         feed.remove_item(child)
         continue
     else:
         wordlists[gid] = wordlist
 
     # Check against blackwords
-    lvl = wordfilter.check(title, title_scale)
+    lvl = wordfilter.check(title, settings.title_scale)
     if content != "":
         lvl += wordfilter.check(content, 1)
     elif summary != "":
         lvl += wordfilter.check(summary, 1)
-    if lvl > threshold:
+    if lvl > settings.threshold:
         logging.warn(_("removing item %(title)s with score %(score)i") %
                      {'title': title, 'score': lvl})
         feed.remove_item(child)
         del wordlists[gid]
-    elif appendlvl:
+    elif settings.appendlvl:
         appendstr = "<br><small><small>lvl: %.2g &nbsp;" % lvl + \
                     "maxcmplvl: %.2f</small></small>" % maxcmplvl
         feed.append_description(child, appendstr)
@@ -140,9 +99,9 @@ for child in feed:
             feed.append_content(child, appendstr)
     logging.info("%.2g %.2f " % (lvl, maxcmplvl) + title)
 
-if outputfile is None:
+if settings.outputfile is None:
     # Write output to console
     feed.print()
 else:
     # Write output to file
-    feed.write(outputfile)
+    feed.write(settings.outputfile)
