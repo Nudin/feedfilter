@@ -15,15 +15,15 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from gettext import gettext as _
 import logging
 import os
 import re
+from gettext import gettext as _
 
 import settings
 
 
-class Filter():
+class Filter:
     """
     Match a set of blacklisted words against a text
     """
@@ -54,26 +54,28 @@ class Filter():
         The strings are handled case intensive, except if the are less or equal
         four digits long or written completely in UPPER CASE.
         """
-        c = re.compile('  +')
+        c = re.compile("  +")
         try:
-            with open(os.path.join(self.filterdir, filename), 'rU') as infile:
+            with open(os.path.join(self.filterdir, filename), "rU") as infile:
                 for line in infile:
                     if line[0] == "#":
                         continue
                     if len(line) <= 1:
                         continue
-                    tmp = c.sub('\t', line.strip()).split('\t')
+                    tmp = c.sub("\t", line.strip()).split("\t")
                     try:
                         if len(tmp[0]) <= 3 or tmp[0].isupper():
                             self.exactblackwords[tmp[0]] = float(tmp[1])
                         else:
                             self.blackwords[tmp[0].lower()] = float(tmp[1])
                     except:
-                        logging.warn(_("Cannot parse line in %(filename)s:\n%(line)s") %
-                                     {'filename': filename, 'line': line})
+                        logging.warn(
+                            _("Cannot parse line in %(filename)s:\n%(line)s")
+                            % {"filename": filename, "line": line}
+                        )
                         continue
         except IOError:
-            logging.warn('error opening file: ' + filename)
+            logging.warn("error opening file: " + filename)
 
     def check(self, text, multiplier=1):
         """
@@ -86,8 +88,8 @@ class Filter():
         lvl = 0
         for word in self.blackwords:
             if ltext.find(word) != -1:
-                lvl += multiplier*self.blackwords[word]
+                lvl += multiplier * self.blackwords[word]
         for word in self.exactblackwords:
             if text.find(word) != -1:
-                lvl += multiplier*self.exactblackwords[word]
+                lvl += multiplier * self.exactblackwords[word]
         return lvl

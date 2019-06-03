@@ -17,17 +17,17 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import gettext
+import logging
 from gettext import gettext as _
 
 import comparetext
+import logger
+import settings
 from feed import Feed
 from filter import Filter
-import logging
-import settings
-import logger
 
 # setup gettext
-gettext.textdomain('feedfilter')
+gettext.textdomain("feedfilter")
 
 # parse commandline arguments and settingsfile
 feedfile = settings.read_argv()
@@ -38,13 +38,13 @@ logger.setupLogger()
 
 # read and parse filterfiles
 wordfilter = Filter()
-wordfilter.read_filterlist('./blackwordlist.txt')
+wordfilter.read_filterlist("./blackwordlist.txt")
 wordfilter.read_filterlist(settings.sitename)
 
 # Parse feed
 feed = Feed(feedfile)
 # For now we use the language without any regional variants
-lang = feed.get_lang().split('-')[0]
+lang = feed.get_lang().split("-")[0]
 
 wordlists = {}
 for child in feed:
@@ -62,8 +62,10 @@ for child in feed:
         maxcmplvl = max(maxcmplvl, t)
         if t > settings.cmp_threshold:
             feed.add_crosslink(index, link, title)
-            logging.warn(_("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s") %
-                         {'duplicate': title, 'news': feed.get_title(index)})
+            logging.warn(
+                _("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s")
+                % {"duplicate": title, "news": feed.get_title(index)}
+            )
             continue
     if maxcmplvl > settings.cmp_threshold:
         feed.remove_item(child)
@@ -78,13 +80,17 @@ for child in feed:
     elif summary != "":
         lvl += wordfilter.check(summary, 1)
     if lvl > settings.threshold:
-        logging.warn(_("removing item %(title)s with score %(score)i") %
-                     {'title': title, 'score': lvl})
+        logging.warn(
+            _("removing item %(title)s with score %(score)i")
+            % {"title": title, "score": lvl}
+        )
         feed.remove_item(child)
         del wordlists[gid]
     elif settings.appendlvl:
-        appendstr = "<br><small><small>lvl: %.2g &nbsp;" % lvl + \
-                    "maxcmplvl: %.2f</small></small>" % maxcmplvl
+        appendstr = (
+            "<br><small><small>lvl: %.2g &nbsp;" % lvl
+            + "maxcmplvl: %.2f</small></small>" % maxcmplvl
+        )
         feed.append_description(child, appendstr)
         if content != "":
             feed.append_content(child, appendstr)

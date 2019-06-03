@@ -23,6 +23,6 @@ def toBool(obj):
     if type(obj) is bool:
         return obj
     elif type(obj) is str:
-        return obj.lower() == 'true'
+        return obj.lower() == "true"
     else:
-        raise TypeError('Argument has to be Boolean or String')
+        raise TypeError("Argument has to be Boolean or String")

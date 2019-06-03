@@ -16,17 +16,19 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import logging
+
+import settings
+
 try:
     import coloredlogs
 except ImportError:
     pass
-import settings
 
 
 def setupLogger():
     if settings.logfile is not None:
-        fmt = '%(asctime)s [%(levelname)s] %(message)s'
-        date_fmt = '%Y-%m-%d %H:%M'
+        fmt = "%(asctime)s [%(levelname)s] %(message)s"
+        date_fmt = "%Y-%m-%d %H:%M"
 
         try:
             consoleFormatter = coloredlogs.ColoredFormatter(fmt, date_fmt)
@@ -46,6 +48,10 @@ def setupLogger():
         logging.getLogger().addHandler(consoleHandler)
     else:
         try:
-            coloredlogs.install(fmt=fmt, datefmt=date_fmt, level=settings.loglevel_stderr)
+            coloredlogs.install(
+                fmt=fmt, datefmt=date_fmt, level=settings.loglevel_stderr
+            )
         except NameError:
-            logging.basicConfig(format=fmt, datefmt=date_fmt, level=settings.loglevel_stderr)
+            logging.basicConfig(
+                format=fmt, datefmt=date_fmt, level=settings.loglevel_stderr
+            )

@@ -15,39 +15,40 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import logging
 import math
 import os
-from collections import Counter
 import re
-import logging
+from collections import Counter
 from gettext import gettext as _
 
-filedir = os.path.join(os.path.dirname(__file__), os.path.pardir,
-                       "include", "commonwords")
+filedir = os.path.join(
+    os.path.dirname(__file__), os.path.pardir, "include", "commonwords"
+)
 
 common_words = {}
 for lang in os.listdir(filedir):
     try:
         filename = os.path.join(filedir, lang)
-        common_words[lang] = open(filename, 'rU').read().split()
+        common_words[lang] = open(filename, "rU").read().split()
     except Exception:
         logging.warn(_("Can't load file %s") % common_words[lang])
         pass
 
 # we remove all special characters from the text before splitting it into words
-specialchar_filter = re.compile('[^\w\s]+', re.UNICODE)
+specialchar_filter = re.compile("[^\w\s]+", re.UNICODE)
 
 # For the comparison we ignore all "words"
 # only consisting of digits,
 # of length one and
 # of length two or three witch are not written in UPPER case
-re_filters = ['\d+$', '\w$', '[A-Z][a-z]{1,2}$']
+re_filters = ["\d+$", "\w$", "[A-Z][a-z]{1,2}$"]
 compiled_re_filters = (re.compile(i) for i in re_filters)
 
 
 def analyse(lang, *txt):
-    txt = ' '.join(txt)
-    txt = specialchar_filter.sub('', txt)
+    txt = " ".join(txt)
+    txt = specialchar_filter.sub("", txt)
 
     wordlist = Counter(txt.split())
 
@@ -67,7 +68,7 @@ def analyse(lang, *txt):
     else:
         logging.warn(_("No commonwords-list available for language %s") % lang)
 
-    norm = math.sqrt(sum(value*value*len(key) for key, value in wordlist.items()))
+    norm = math.sqrt(sum(value * value * len(key) for key, value in wordlist.items()))
 
     return (wordlist, norm)
 
@@ -77,14 +78,14 @@ def comp(dict_1, dict_2):
     dict_2, norm_2 = dict_2
 
     if len(dict_1) < len(dict_2):
-        sp = sum(value*dict_2.get(key, 0)*len(key) for key, value in dict_1.items())
+        sp = sum(value * dict_2.get(key, 0) * len(key) for key, value in dict_1.items())
     else:
-        sp = sum(value*dict_1.get(key, 0)*len(key) for key, value in dict_2.items())
-    n = norm_1*norm_2
+        sp = sum(value * dict_1.get(key, 0) * len(key) for key, value in dict_2.items())
+    n = norm_1 * norm_2
     if n == 0:
         return 0
     else:
-        return sp/n
+        return sp / n
 
 
 def comp_txt(txt_1, txt_2):

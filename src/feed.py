@@ -15,20 +15,21 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import string
 import random
 import re
+import string
 import xml.etree.ElementTree as etree
 from gettext import gettext as _
 
 
-class Feed():
+class Feed:
     """
     Parse and modify an Atom or RSS-Feed
     """
-    atom_url = 'http://www.w3.org/2005/Atom'
-    rss_url = 'http://purl.org/rss/1.0/modules/content/'
-    xml_rul = 'https://www.w3.org/XML/1998/namespace'
+
+    atom_url = "http://www.w3.org/2005/Atom"
+    rss_url = "http://purl.org/rss/1.0/modules/content/"
+    xml_rul = "https://www.w3.org/XML/1998/namespace"
 
     def __init__(self, feedfile):
         """
@@ -38,14 +39,14 @@ class Feed():
         """
         self.tree = etree.parse(feedfile)
         self.root = self.tree.getroot()
-        if self.root.tag == '{%s}feed' % self.atom_url:
-            self.format = 'atom'
-        elif self.root.tag == 'rss':
-            self.format = 'rss'
+        if self.root.tag == "{%s}feed" % self.atom_url:
+            self.format = "atom"
+        elif self.root.tag == "rss":
+            self.format = "rss"
         else:
             print(_("Unknown feedformat!"))
             exit
-        randomstr = ''.join(random.choice(string.ascii_letters) for _ in range(12))
+        randomstr = "".join(random.choice(string.ascii_letters) for _ in range(12))
         self.marker = "<!--" + randomstr + "-->"
 
     def __get_child(self, idindexorchild):
@@ -69,23 +70,22 @@ class Feed():
         """
         Get all news-items in the feed
         """
-        if self.format == 'atom':
-            return iter(self.root.findall('{%s}entry' % self.atom_url))
-        elif self.format == 'rss':
-            return iter(self.root.find('channel').findall('item'))
+        if self.format == "atom":
+            return iter(self.root.findall("{%s}entry" % self.atom_url))
+        elif self.format == "rss":
+            return iter(self.root.find("channel").findall("item"))
 
     def get_lang(self):
         """
         Get the language of the feed
         """
         try:
-            if self.format == 'atom':
-                return self.root.attrib['{%s}lang' % self.xml_url].lower()
-            elif self.format == 'rss':
-                return self.root.find('channel').find('language').text.lower()
+            if self.format == "atom":
+                return self.root.attrib["{%s}lang" % self.xml_url].lower()
+            elif self.format == "rss":
+                return self.root.find("channel").find("language").text.lower()
         except Exception:
             return ""
-
 
     def get_title(self, idindexorchild):
         """
@@ -93,11 +93,11 @@ class Feed():
         """
         try:
             child = self.__get_child(idindexorchild)
-            if self.format == 'atom':
-                title = child.find('{%s}title' % self.atom_url)
+            if self.format == "atom":
+                title = child.find("{%s}title" % self.atom_url)
                 return title.text
-            elif self.format == 'rss':
-                title = child.find('title')
+            elif self.format == "rss":
+                title = child.find("title")
                 return title.text.strip()
         except Exception:
             return ""
@@ -108,11 +108,11 @@ class Feed():
         """
         try:
             child = self.__get_child(idindexorchild)
-            if self.format == 'atom':
-                title = child.find('{%s}title' % self.atom_url)
+            if self.format == "atom":
+                title = child.find("{%s}title" % self.atom_url)
                 title.text = newtitle
-            elif self.format == 'rss':
-                title = child.find('title')
+            elif self.format == "rss":
+                title = child.find("title")
                 title.text = newtitle
         except Exception:
             pass
@@ -123,11 +123,11 @@ class Feed():
         """
         try:
             child = self.__get_child(idindexorchild)
-            if self.format == 'atom':
-                desc = child.find('{%s}summary' % self.atom_url)
+            if self.format == "atom":
+                desc = child.find("{%s}summary" % self.atom_url)
                 return desc.text
-            elif self.format == 'rss':
-                desc = child.find('description')
+            elif self.format == "rss":
+                desc = child.find("description")
                 return desc.text.strip()
         except Exception:
             return ""
@@ -138,15 +138,15 @@ class Feed():
         """
         try:
             child = self.__get_child(idindexorchild)
-            if self.format == 'atom':
-                desc = child.find('{%s}summary' % self.atom_url)
+            if self.format == "atom":
+                desc = child.find("{%s}summary" % self.atom_url)
                 if desc is None:
-                    desc = etree.SubElement(child, '{%s}summary' % self.atom_url)
+                    desc = etree.SubElement(child, "{%s}summary" % self.atom_url)
                 desc.text = text
-            elif self.format == 'rss':
-                desc = child.find('description')
+            elif self.format == "rss":
+                desc = child.find("description")
                 if desc is None:
-                    desc = etree.SubElement(child, 'description')
+                    desc = etree.SubElement(child, "description")
                 desc.text = text
         except Exception:
             pass
@@ -155,14 +155,17 @@ class Feed():
         """
         Appends the given text to the description
         """
-        self.set_description(idindexorchild,
-                             self.get_description(idindexorchild) + text)
+        self.set_description(
+            idindexorchild, self.get_description(idindexorchild) + text
+        )
 
     def _insert_or_append(self, text, addition):
         p = text.find(self.marker)
         if p == -1:
-            text += _("<br>Similar News:<ul><li>%(link)s</li>%(marker)s</ul>") % \
-                      {'link': addition, 'marker': self.marker}
+            text += _("<br>Similar News:<ul><li>%(link)s</li>%(marker)s</ul>") % {
+                "link": addition,
+                "marker": self.marker,
+            }
         else:
             text = text[0:p] + "<li>" + addition + "</li>" + text[p:]
         return text
@@ -171,7 +174,7 @@ class Feed():
         """
         Appends the given link to the description and content under an heading "see also"
         """
-        fulllink = "<a href=\"" + link + "\">" + title + "</a>"
+        fulllink = '<a href="' + link + '">' + title + "</a>"
         desc = self.get_description(idindexorchild)
         if desc != "":
             self.set_description(idindexorchild, self._insert_or_append(desc, fulllink))
@@ -180,11 +183,11 @@ class Feed():
         if cont != "":
             self.set_content(idindexorchild, self._insert_or_append(cont, fulllink))
         title = self.get_title(idindexorchild)
-        if re.match('\[\+\d\]', title[-4:]):
-            num = int(title[-2]) + 1 
-            self.set_title(idindexorchild, title[:-4] + '[+%i]' % num)
+        if re.match("\[\+\d\]", title[-4:]):
+            num = int(title[-2]) + 1
+            self.set_title(idindexorchild, title[:-4] + "[+%i]" % num)
         else:
-            self.set_title(idindexorchild, title + ' [+1]')
+            self.set_title(idindexorchild, title + " [+1]")
 
     def get_content(self, idindexorchild):
         """
@@ -192,11 +195,11 @@ class Feed():
         """
         try:
             child = self.__get_child(idindexorchild)
-            if self.format == 'atom':
-                cont = child.find('{%s}content' % self.atom_url)
-                return ''.join([etree.tostring(i).decode() for i in list(cont)])
-            elif self.format == 'rss':
-                cont = child.find('{%s}encoded' % self.rss_url)
+            if self.format == "atom":
+                cont = child.find("{%s}content" % self.atom_url)
+                return "".join([etree.tostring(i).decode() for i in list(cont)])
+            elif self.format == "rss":
+                cont = child.find("{%s}encoded" % self.rss_url)
                 return cont.text.strip()
         except Exception:
             return ""
@@ -207,20 +210,20 @@ class Feed():
         """
         try:
             child = self.__get_child(idindexorchild)
-            if self.format == 'atom':
-                cont = child.find('{%s}content' % self.atom_url)
+            if self.format == "atom":
+                cont = child.find("{%s}content" % self.atom_url)
                 if cont is None:
-                    cont = etree.SubElement(child, '{%s}content' % self.atom_url)
+                    cont = etree.SubElement(child, "{%s}content" % self.atom_url)
                 try:
-                        new = etree.fromstring(text)
+                    new = etree.fromstring(text)
                 except etree.ParseError:
-                        new = etree.fromstring('<div>' + text + '</div>')
+                    new = etree.fromstring("<div>" + text + "</div>")
                 [cont.remove(i) for i in list(cont)]
                 cont.append(new)
-            elif self.format == 'rss':
-                cont = child.find('{%s}encoded' % self.rss_url)
+            elif self.format == "rss":
+                cont = child.find("{%s}encoded" % self.rss_url)
                 if cont is None:
-                    cont = etree.SubElement(child, '{%s}encoded' % self.rss_url)
+                    cont = etree.SubElement(child, "{%s}encoded" % self.rss_url)
                 cont.text = text
         except Exception:
             pass
@@ -237,11 +240,11 @@ class Feed():
         """
         try:
             child = self.__get_child(idindexorchild)
-            if self.format == 'atom':
-                link = child.find('{%s}link' % self.atom_url)
-                return link.attrib['href']
-            elif self.format == 'rss':
-                link = child.find('link')
+            if self.format == "atom":
+                link = child.find("{%s}link" % self.atom_url)
+                return link.attrib["href"]
+            elif self.format == "rss":
+                link = child.find("link")
                 return link.text.strip()
         except Exception:
             # This should never happen, handling necessary?
@@ -253,11 +256,11 @@ class Feed():
         """
         try:
             child = self.__get_child(idindexorchild)
-            if self.format == 'atom':
-                gid = child.find('{%s}id' % self.atom_url)
+            if self.format == "atom":
+                gid = child.find("{%s}id" % self.atom_url)
                 return gid.text
-            elif self.format == 'rss':
-                gid = child.find('guid')
+            elif self.format == "rss":
+                gid = child.find("guid")
                 return gid.text.strip()
         except Exception:
             # This should never happen, handling necessary?
@@ -268,17 +271,17 @@ class Feed():
         Remove an item from the feed
         """
         child = self.__get_child(idindexorchild)
-        if self.format == 'atom':
+        if self.format == "atom":
             self.root.remove(child)
-        elif self.format == 'rss':
-            self.root.find('channel').remove(child)
+        elif self.format == "rss":
+            self.root.find("channel").remove(child)
 
     def write(self, filename):
         """
         Write the feed to a file
         """
-        if self.format == 'atom':
-            etree.register_namespace('', self.atom_url)
+        if self.format == "atom":
+            etree.register_namespace("", self.atom_url)
         self.tree.write(filename, encoding="UTF-8", xml_declaration=True)
 
     def print(self):
