@@ -21,6 +21,7 @@ import os
 import re
 from collections import Counter
 from gettext import gettext as _
+from typing import Tuple
 
 filedir = os.path.join(
     os.path.dirname(__file__), os.path.pardir, "include", "commonwords"
@@ -46,7 +47,7 @@ re_filters = ["\d+$", "\w$", "[A-Z][a-z]{1,2}$"]
 compiled_re_filters = (re.compile(i) for i in re_filters)
 
 
-def analyse(lang, *txt):
+def analyse(lang, *txt) -> Tuple[Counter, float]:
     txt = " ".join(txt)
     txt = specialchar_filter.sub("", txt)
 

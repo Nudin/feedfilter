@@ -15,277 +15,508 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import random
 import re
-import string
+import sys
 import xml.etree.ElementTree as etree
+from abc import ABC, abstractmethod
 from gettext import gettext as _
 
+from utils import append_to_html
 
-class Feed:
+RSS_URL = "http://purl.org/rss/1.0/modules/content/"
+ATOM_URL = "http://www.w3.org/2005/Atom"
+XML_URL = "https://www.w3.org/XML/1998/namespace"
+
+
+def get_feed(feed_file):
+    """
+    Determin the format of the feed and parse it
+    """
+    tree = etree.parse(feed_file)
+    root = tree.getroot()
+    if root.tag == "{%s}feed" % ATOM_URL:
+        return AtomFeed(tree)
+    if root.tag == "rss":
+        return RssFeed(tree)
+    raise NotImplementedError(_("Unknown feedformat!"))
+
+
+class Content:
+    """
+    Represents one item of a feed.
+    """
+
+    def __init__(self, item):
+        self.item = item
+
+    @property
+    @abstractmethod
+    def title(self):
+        """
+        The title of the news-item
+        """
+
+    @title.setter
+    @abstractmethod
+    def title(self, newtitle):
+        """
+        Set the title of the news-item
+        """
+
+    @property
+    @abstractmethod
+    def description(self):
+        """
+        The description of the news-item
+        """
+
+    @description.setter
+    @abstractmethod
+    def description(self, text):
+        """
+        Set the description
+        """
+
+    def append_description(
+        self,
+        text,
+        html=True,
+        tag="p",
+        containertag="div",
+        containername=None,
+    ):
+        """
+        Append the given text to the description
+        """
+        original_content = self.description
+        new_content = self.__append_textorhtml__(
+            original_content,
+            text,
+            html=html,
+            tag=tag,
+            containertag=containertag,
+            containername=containername,
+        )
+        self.description = new_content
+
+    def add_crosslink(self, link, title):
+        """
+        Append the given link to the description and content under an heading "see also"
+        """
+        fulllink = '<a href="' + link + '">' + title + "</a>"
+        self.append_description(
+            fulllink,
+            html=True,
+            containername="crosslink",
+            containertag="ul",
+            tag="li",
+        )
+        self.append_content(
+            fulllink,
+            html=True,
+            containername="crosslink",
+            containertag="ul",
+            tag="li",
+        )
+
+        if re.match(r"\[\+\d\]", self.title[-4:]):
+            num = int(self.title[-2]) + 1
+            self.title = self.title[:-4] + "[+%i]" % num
+        else:
+            self.title = self.title + " [+1]"
+
+    @property
+    @abstractmethod
+    def content(self):
+        """
+        The content of the news-item
+        """
+
+    @content.setter
+    @abstractmethod
+    def content(self, text):
+        """
+        Set the content of the news-item
+        """
+
+    @staticmethod
+    def __append_textorhtml__(
+        original_content,
+        text,
+        html=False,
+        tag="p",
+        containertag="div",
+        containername=None,
+    ):
+        try:
+            return append_to_html(
+                original_content, text, html, tag, containertag, containername
+            )
+        except Exception as e:
+            new_content = original_content + text
+            return new_content
+
+    def append_content(
+        self,
+        text,
+        html=True,
+        tag="p",
+        containertag="div",
+        containername=None,
+    ):
+        """
+        Append the given text to the content
+        """
+        original_content = self.content
+        new_content = self.__append_textorhtml__(
+            original_content,
+            text,
+            html=html,
+            tag=tag,
+            containertag=containertag,
+            containername=containername,
+        )
+        self.content = new_content
+
+    @property
+    @abstractmethod
+    def link(self):
+        """
+        The link of the news-item
+        """
+
+    @property
+    @abstractmethod
+    def id(self):
+        """
+        The id of the news-item
+        """
+
+
+class AtomContent(Content):
+    """
+    Implementation of Content for Atom feeds
+    """
+
+    @property
+    def title(self):
+        """
+        The title of the news-item
+        """
+        try:
+            title = self.item.find("{%s}title" % ATOM_URL)
+            return title.text
+        except Exception:
+            return ""
+
+    @title.setter
+    def title(self, new_title):
+        """
+        Set the title of the news-item
+        """
+        try:
+            title = self.item.find("{%s}title" % ATOM_URL)
+            title.text = new_title
+        except Exception:
+            pass
+
+    @property
+    def description(self):
+        """
+        The description of the news-item
+        """
+        try:
+            desc = self.item.find("{%s}summary" % ATOM_URL)
+            return desc.text
+        except Exception:
+            return ""
+
+    @description.setter
+    def description(self, text):
+        """
+        Appends the given text to the description
+        """
+        try:
+            desc = self.item.find("{%s}summary" % ATOM_URL)
+            if desc is None:
+                desc = etree.SubElement(self.item, "{%s}summary" % ATOM_URL)
+            desc.text = text
+        except Exception:
+            pass
+
+    @property
+    def content(self):
+        """
+        The content of the news-item
+        """
+        try:
+            cont = self.item.find("{%s}content" % ATOM_URL)
+            return "".join([etree.tostring(i).decode() for i in list(cont)])
+        except Exception:
+            return ""
+
+    @content.setter
+    def content(self, text):
+        """
+        Appends the given text to the content
+        """
+        try:
+            cont = self.item.find("{%s}content" % ATOM_URL)
+            if cont is None:
+                cont = etree.SubElement(self.item, "{%s}content" % ATOM_URL)
+            try:
+                new = etree.fromstring(text)
+            except etree.ParseError:
+                new = etree.fromstring("<div>" + text + "</div>")
+            for i in list(cont):
+                cont.remove(i)
+            cont.append(new)
+        except Exception:
+            pass
+
+    @property
+    def link(self):
+        """
+        The link of the news-item
+        """
+        try:
+            link = self.item.find("{%s}link" % ATOM_URL)
+            return link.attrib["href"]
+        except Exception:
+            # This should never happen, handling necessary?
+            return ""
+
+    @property
+    def id(self):
+        """
+        The id of the news-item
+        """
+        try:
+            gid = self.item.find("{%s}id" % ATOM_URL)
+            return gid.text
+        except Exception:
+            # This should never happen, handling necessary?
+            return ""
+
+
+class RSSContent(Content):
+    """
+    Implementation of Content for RSS feeds
+    """
+
+    @property
+    def title(self):
+        """
+        The title of the news-item
+        """
+        try:
+            title = self.item.find("title")
+            return title.text.strip()
+        except Exception:
+            return ""
+
+    @title.setter
+    def title(self, new_title):
+        """
+        Set the title of the news-item
+        """
+        try:
+            title = self.item.find("title")
+            title.text = new_title
+        except Exception:
+            pass
+
+    @property
+    def description(self):
+        """
+        The description of the news-item
+        """
+        try:
+            desc = self.item.find("description")
+            return desc.text.strip()
+        except Exception:
+            return ""
+
+    @description.setter
+    def description(self, text):
+        """
+        Appends the given text to the description
+        """
+        try:
+            desc = self.item.find("description")
+            if desc is None:
+                desc = etree.SubElement(self.item, "description")
+            desc.text = text
+        except Exception:
+            pass
+
+    @property
+    def content(self):
+        """
+        The content of the news-item
+        """
+        try:
+            cont = self.item.find("{%s}encoded" % RSS_URL)
+            return cont.text.strip()
+        except Exception:
+            return ""
+
+    @content.setter
+    def content(self, text):
+        """
+        Appends the given text to the content
+        """
+        try:
+            cont = self.item.find("{%s}encoded" % RSS_URL)
+            if cont is None:
+                cont = etree.SubElement(self.item, "{%s}encoded" % RSS_URL)
+            cont.text = text
+        except Exception:
+            pass
+
+    @property
+    def link(self):
+        """
+        The link of the news-item
+        """
+        try:
+            link = self.item.find("link")
+            return link.text.strip()
+        except Exception:
+            # This should never happen, handling necessary?
+            return ""
+
+    @property
+    def id(self):
+        """
+        The id of the news-item
+        """
+        try:
+            gid = self.item.find("guid")
+            return gid.text.strip()
+        except Exception:
+            # This should never happen, handling necessary?
+            return ""
+
+
+class Feed(ABC):
     """
     Parse and modify an Atom or RSS-Feed
     """
 
-    atom_url = "http://www.w3.org/2005/Atom"
-    rss_url = "http://purl.org/rss/1.0/modules/content/"
-    xml_rul = "https://www.w3.org/XML/1998/namespace"
-
-    def __init__(self, feedfile):
+    def __init__(self, tree):
         """
         Initiate the Feed
-
-        feedfile: filename or context manager of the feed
         """
-        self.tree = etree.parse(feedfile)
+        self.tree = tree
         self.root = self.tree.getroot()
-        if self.root.tag == "{%s}feed" % self.atom_url:
-            self.format = "atom"
-        elif self.root.tag == "rss":
-            self.format = "rss"
-        else:
-            print(_("Unknown feedformat!"))
-            exit
-        randomstr = "".join(random.choice(string.ascii_letters) for _ in range(12))
-        self.marker = "<!--" + randomstr + "-->"
 
-    def __get_child(self, idindexorchild):
+    def get_child(self, index):
         """
-        Gets a child by an identifier
-        the identifier can be:
-            * the child itself (in this case the function will simply return it)
-            * the index-number (deprecated)
-            * the id of the child
+        Gets a child by its id
         """
-        if type(idindexorchild) is int:
-            return list(self)[idindexorchild]
-        elif type(idindexorchild) is str:
-            for child in self:
-                if self.get_id(child) == idindexorchild:
-                    return child
-        else:
-            return idindexorchild
+        assert isinstance(index, str)
+        for child in self:
+            if child.id == index:
+                return child
+        raise KeyError("Child not found.")
 
+    @abstractmethod
     def __iter__(self):
         """
         Get all news-items in the feed
         """
-        if self.format == "atom":
-            return iter(self.root.findall("{%s}entry" % self.atom_url))
-        elif self.format == "rss":
-            return iter(self.root.find("channel").findall("item"))
 
-    def get_lang(self):
+    @property
+    @abstractmethod
+    def lang(self):
         """
-        Get the language of the feed
+        The language of the feed
         """
-        try:
-            if self.format == "atom":
-                return self.root.attrib["{%s}lang" % self.xml_url].lower()
-            elif self.format == "rss":
-                return self.root.find("channel").find("language").text.lower()
-        except Exception:
-            return ""
 
-    def get_title(self, idindexorchild):
-        """
-        Get the title of a news-item
-        """
-        try:
-            child = self.__get_child(idindexorchild)
-            if self.format == "atom":
-                title = child.find("{%s}title" % self.atom_url)
-                return title.text
-            elif self.format == "rss":
-                title = child.find("title")
-                return title.text.strip()
-        except Exception:
-            return ""
-
-    def set_title(self, idindexorchild, newtitle):
-        """
-        Set the title of a news-item
-        """
-        try:
-            child = self.__get_child(idindexorchild)
-            if self.format == "atom":
-                title = child.find("{%s}title" % self.atom_url)
-                title.text = newtitle
-            elif self.format == "rss":
-                title = child.find("title")
-                title.text = newtitle
-        except Exception:
-            pass
-
-    def get_description(self, idindexorchild):
-        """
-        Get the description of a news-item
-        """
-        try:
-            child = self.__get_child(idindexorchild)
-            if self.format == "atom":
-                desc = child.find("{%s}summary" % self.atom_url)
-                return desc.text
-            elif self.format == "rss":
-                desc = child.find("description")
-                return desc.text.strip()
-        except Exception:
-            return ""
-
-    def set_description(self, idindexorchild, text):
-        """
-        Appends the given text to the description
-        """
-        try:
-            child = self.__get_child(idindexorchild)
-            if self.format == "atom":
-                desc = child.find("{%s}summary" % self.atom_url)
-                if desc is None:
-                    desc = etree.SubElement(child, "{%s}summary" % self.atom_url)
-                desc.text = text
-            elif self.format == "rss":
-                desc = child.find("description")
-                if desc is None:
-                    desc = etree.SubElement(child, "description")
-                desc.text = text
-        except Exception:
-            pass
-
-    def append_description(self, idindexorchild, text):
-        """
-        Appends the given text to the description
-        """
-        self.set_description(
-            idindexorchild, self.get_description(idindexorchild) + text
-        )
-
-    def _insert_or_append(self, text, addition):
-        p = text.find(self.marker)
-        if p == -1:
-            text += _("<br>Similar News:<ul><li>%(link)s</li>%(marker)s</ul>") % {
-                "link": addition,
-                "marker": self.marker,
-            }
-        else:
-            text = text[0:p] + "<li>" + addition + "</li>" + text[p:]
-        return text
-
-    def add_crosslink(self, idindexorchild, link, title):
-        """
-        Appends the given link to the description and content under an heading "see also"
-        """
-        fulllink = '<a href="' + link + '">' + title + "</a>"
-        desc = self.get_description(idindexorchild)
-        if desc != "":
-            self.set_description(idindexorchild, self._insert_or_append(desc, fulllink))
-
-        cont = self.get_content(idindexorchild)
-        if cont != "":
-            self.set_content(idindexorchild, self._insert_or_append(cont, fulllink))
-        title = self.get_title(idindexorchild)
-        if re.match("\[\+\d\]", title[-4:]):
-            num = int(title[-2]) + 1
-            self.set_title(idindexorchild, title[:-4] + "[+%i]" % num)
-        else:
-            self.set_title(idindexorchild, title + " [+1]")
-
-    def get_content(self, idindexorchild):
-        """
-        Get the content of a news-item
-        """
-        try:
-            child = self.__get_child(idindexorchild)
-            if self.format == "atom":
-                cont = child.find("{%s}content" % self.atom_url)
-                return "".join([etree.tostring(i).decode() for i in list(cont)])
-            elif self.format == "rss":
-                cont = child.find("{%s}encoded" % self.rss_url)
-                return cont.text.strip()
-        except Exception:
-            return ""
-
-    def set_content(self, idindexorchild, text):
-        """
-        Appends the given text to the content
-        """
-        try:
-            child = self.__get_child(idindexorchild)
-            if self.format == "atom":
-                cont = child.find("{%s}content" % self.atom_url)
-                if cont is None:
-                    cont = etree.SubElement(child, "{%s}content" % self.atom_url)
-                try:
-                    new = etree.fromstring(text)
-                except etree.ParseError:
-                    new = etree.fromstring("<div>" + text + "</div>")
-                [cont.remove(i) for i in list(cont)]
-                cont.append(new)
-            elif self.format == "rss":
-                cont = child.find("{%s}encoded" % self.rss_url)
-                if cont is None:
-                    cont = etree.SubElement(child, "{%s}encoded" % self.rss_url)
-                cont.text = text
-        except Exception:
-            pass
-
-    def append_content(self, idindexorchild, text):
-        """
-        Appends the given text to the content
-        """
-        self.set_content(idindexorchild, self.get_content(idindexorchild) + text)
-
-    def get_link(self, idindexorchild):
-        """
-        Get the link of a news-item
-        """
-        try:
-            child = self.__get_child(idindexorchild)
-            if self.format == "atom":
-                link = child.find("{%s}link" % self.atom_url)
-                return link.attrib["href"]
-            elif self.format == "rss":
-                link = child.find("link")
-                return link.text.strip()
-        except Exception:
-            # This should never happen, handling necessary?
-            return ""
-
-    def get_id(self, idindexorchild):
-        """
-        Get the id of a news-item
-        """
-        try:
-            child = self.__get_child(idindexorchild)
-            if self.format == "atom":
-                gid = child.find("{%s}id" % self.atom_url)
-                return gid.text
-            elif self.format == "rss":
-                gid = child.find("guid")
-                return gid.text.strip()
-        except Exception:
-            # This should never happen, handling necessary?
-            return ""
-
-    def remove_item(self, idindexorchild):
+    @abstractmethod
+    def remove_item(self, child):
         """
         Remove an item from the feed
         """
-        child = self.__get_child(idindexorchild)
-        if self.format == "atom":
-            self.root.remove(child)
-        elif self.format == "rss":
-            self.root.find("channel").remove(child)
 
-    def write(self, filename):
+    @abstractmethod
+    def write(self, filename, encoding):
         """
         Write the feed to a file
         """
-        if self.format == "atom":
-            etree.register_namespace("", self.atom_url)
-        self.tree.write(filename, encoding="UTF-8", xml_declaration=True)
 
     def print(self):
         """
         Write the feed to stdout
         """
-        self.write(1)
+        self.write(sys.stdout, encoding="Unicode")
+
+
+class AtomFeed(Feed):
+    """
+    Parse and modify an Atom Feed
+    """
+
+    def __iter__(self):
+        """
+        Get all news-items in the feed
+        """
+        return iter([AtomContent(i) for i in self.root.findall("{%s}entry" % ATOM_URL)])
+
+    @property
+    def lang(self):
+        """
+        The language of the feed
+        """
+        try:
+            return self.root.attrib["{%s}lang" % XML_URL].lower()
+        except Exception:
+            return ""
+
+    def remove_item(self, child):
+        """
+        Remove an item from the feed
+        """
+        self.root.remove(child.item)
+
+    def write(self, filename, encoding="UTF-8"):
+        """
+        Write the feed to a file
+        """
+        etree.register_namespace("", ATOM_URL)
+        self.tree.write(filename, encoding=encoding, xml_declaration=True)
+
+
+class RssFeed(Feed):
+    """
+    Parse and modify an RSS-Feed
+    """
+
+    def __iter__(self):
+        """
+        Get all news-items in the feed
+        """
+        return iter([RSSContent(i) for i in self.root.find("channel").findall("item")])
+
+    @property
+    def lang(self):
+        """
+        The language of the feed
+        """
+        try:
+            return self.root.find("channel").find("language").text.lower()
+        except Exception:
+            return ""
+
+    def remove_item(self, child):
+        """
+        Remove an item from the feed
+        """
+        self.root.find("channel").remove(child.item)
+
+    def write(self, filename, encoding="UTF-8"):
+        """
+        Write the feed to a file
+        """
+        self.tree.write(filename, encoding=encoding, xml_declaration=True)
