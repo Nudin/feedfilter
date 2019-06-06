@@ -20,15 +20,13 @@ import os
 import re
 from gettext import gettext as _
 
-import settings
-
 
 class Filter:
     """
     Match a set of blacklisted words against a text
     """
 
-    def __init__(self):
+    def __init__(self, settings):
         """
         Initialise the filter
 
@@ -49,7 +47,7 @@ class Filter:
 
         Lines starting with the character '#' are ignored.
         All other lines should contain a filterstring and an filtervalue
-        seperated by a single tab (\t) or two or more spaces.
+        separated by a single tab (\t) or two or more spaces.
 
         The strings are handled case intensive, except if the are less or equal
         four digits long or written completely in UPPER CASE.
@@ -69,13 +67,13 @@ class Filter:
                         else:
                             self.blackwords[tmp[0].lower()] = float(tmp[1])
                     except:
-                        logging.warn(
+                        logging.warning(
                             _("Cannot parse line in %(filename)s:\n%(line)s")
                             % {"filename": filename, "line": line}
                         )
                         continue
         except IOError:
-            logging.warn("error opening file: " + filename)
+            logging.warning("error opening file: " + filename)
 
     def check(self, text, multiplier=1):
         """

@@ -17,15 +17,13 @@
 #
 import logging
 
-import settings
-
 try:
     import coloredlogs
 except ImportError:
     pass
 
 
-def setupLogger():
+def setupLogger(settings):
     if settings.logfile is not None:
         fmt = "%(asctime)s [%(levelname)s] %(message)s"
         date_fmt = "%Y-%m-%d %H:%M"

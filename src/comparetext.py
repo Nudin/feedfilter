@@ -32,7 +32,7 @@ for lang in os.listdir(filedir):
         filename = os.path.join(filedir, lang)
         common_words[lang] = open(filename, "rU").read().split()
     except Exception:
-        logging.warn(_("Can't load file %s") % common_words[lang])
+        logging.warning(_("Can't load file %s") % common_words[lang])
         pass
 
 # we remove all special characters from the text before splitting it into words
@@ -66,21 +66,22 @@ def analyse(lang, *txt):
             except KeyError:
                 continue
     else:
-        logging.warn(_("No commonwords-list available for language %s") % lang)
+        logging.warning(_("No commonwords-list available for language %s") % lang)
 
     norm = math.sqrt(sum(value * value * len(key) for key, value in wordlist.items()))
 
     return (wordlist, norm)
 
 
-def comp(dict_1, dict_2):
-    dict_1, norm_1 = dict_1
-    dict_2, norm_2 = dict_2
+def comp(wordlist_1, wordlist_2):
+    dict_1, norm_1 = wordlist_1
+    dict_2, norm_2 = wordlist_2
 
+    # For performance: make sure dict_2 is shorter
     if len(dict_1) < len(dict_2):
-        sp = sum(value * dict_2.get(key, 0) * len(key) for key, value in dict_1.items())
-    else:
-        sp = sum(value * dict_1.get(key, 0) * len(key) for key, value in dict_2.items())
+        dict_1, dict_2 = dict_2, dict_1
+
+    sp = sum(value * dict_1.get(key, 0) * len(key) for key, value in dict_2.items())
     n = norm_1 * norm_2
     if n == 0:
         return 0

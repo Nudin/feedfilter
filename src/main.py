@@ -22,27 +22,28 @@ from gettext import gettext as _
 
 import comparetext
 import logger
-import settings
 from feed import Feed
 from filter import Filter
+from settings import Settings
 
 # setup gettext
 gettext.textdomain("feedfilter")
 
 # parse commandline arguments and settingsfile
-feedfile = settings.read_argv()
+settings = Settings()
+settings.read_argv()
 settings.read_settings()
 
 # Start Logger
-logger.setupLogger()
+logger.setupLogger(settings)
 
 # read and parse filterfiles
-wordfilter = Filter()
+wordfilter = Filter(settings)
 wordfilter.read_filterlist("./blackwordlist.txt")
 wordfilter.read_filterlist(settings.sitename)
 
 # Parse feed
-feed = Feed(feedfile)
+feed = Feed(settings.feedfile)
 # For now we use the language without any regional variants
 lang = feed.get_lang().split("-")[0]
 
@@ -62,7 +63,7 @@ for child in feed:
         maxcmplvl = max(maxcmplvl, t)
         if t > settings.cmp_threshold:
             feed.add_crosslink(index, link, title)
-            logging.warn(
+            logging.warning(
                 _("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s")
                 % {"duplicate": title, "news": feed.get_title(index)}
             )
@@ -75,12 +76,12 @@ for child in feed:
 
     # Check against blackwords
     lvl = wordfilter.check(title, settings.title_scale)
-    if content != "":
+    if content:
         lvl += wordfilter.check(content, 1)
-    elif summary != "":
+    elif summary:
         lvl += wordfilter.check(summary, 1)
     if lvl > settings.threshold:
-        logging.warn(
+        logging.warning(
             _("removing item %(title)s with score %(score)i")
             % {"title": title, "score": lvl}
         )
