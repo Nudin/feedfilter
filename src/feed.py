@@ -78,6 +78,39 @@ class Content:
         Set the description
         """
 
+    def _find_or_create_(self, tag_name, search_in=None):
+        """
+        Search a tag of type `tag_name` and create if not existing.
+
+        Will search in `search_in` or in self.item is not provided. Finds only
+        direct child entities.
+        """
+        search_in = search_in or self.item
+        element = search_in.find(tag_name)
+        if element is None:
+            element = etree.SubElement(search_in, tag_name)
+        return element
+
+    def _get_text_(self, element_name):
+        """
+        Get the text content of an element with given name
+        """
+        try:
+            element = self.item.find(element_name)
+            return element.text.strip()
+        except Exception:
+            return ""
+
+    def _set_text_(self, element_name, text):
+        """
+        Set the text content of an element with given name
+        """
+        try:
+            element = self._find_or_create_(element_name)
+            element.text = text
+        except Exception:
+            pass
+
     def append_description(
         self,
         text,
@@ -141,18 +174,9 @@ class Content:
         """
 
     @staticmethod
-    def __append_textorhtml__(
-        original_content,
-        text,
-        html=False,
-        tag="p",
-        containertag="div",
-        containername=None,
-    ):
+    def __append_textorhtml__(original_content, text, **kwargs):
         try:
-            return append_to_html(
-                original_content, text, html, tag, containertag, containername
-            )
+            return append_to_html(original_content, text, **kwargs)
         except Exception as e:
             new_content = original_content + text
             return new_content
@@ -201,55 +225,27 @@ class AtomContent(Content):
 
     @property
     def title(self):
-        """
-        The title of the news-item
-        """
-        try:
-            title = self.item.find("{%s}title" % ATOM_URL)
-            return title.text
-        except Exception:
-            return ""
+        """ The title of the news-item """
+        return self._get_text_("{%s}title" % ATOM_URL)
 
     @title.setter
-    def title(self, new_title):
-        """
-        Set the title of the news-item
-        """
-        try:
-            title = self.item.find("{%s}title" % ATOM_URL)
-            title.text = new_title
-        except Exception:
-            pass
+    def title(self, text):
+        """ Set the title of the news-item """
+        self._set_text_("{%s}title" % ATOM_URL, text)
 
     @property
     def description(self):
-        """
-        The description of the news-item
-        """
-        try:
-            desc = self.item.find("{%s}summary" % ATOM_URL)
-            return desc.text
-        except Exception:
-            return ""
+        """ The description of the news-item """
+        return self._get_text_("{%s}summary" % ATOM_URL)
 
     @description.setter
     def description(self, text):
-        """
-        Appends the given text to the description
-        """
-        try:
-            desc = self.item.find("{%s}summary" % ATOM_URL)
-            if desc is None:
-                desc = etree.SubElement(self.item, "{%s}summary" % ATOM_URL)
-            desc.text = text
-        except Exception:
-            pass
+        """ Set the description """
+        self._set_text_("{%s}summary" % ATOM_URL, text)
 
     @property
     def content(self):
-        """
-        The content of the news-item
-        """
+        """ The content of the news-item """
         try:
             cont = self.item.find("{%s}content" % ATOM_URL)
             return "".join([etree.tostring(i).decode() for i in list(cont)])
@@ -258,28 +254,12 @@ class AtomContent(Content):
 
     @content.setter
     def content(self, text):
-        """
-        Appends the given text to the content
-        """
-        try:
-            cont = self.item.find("{%s}content" % ATOM_URL)
-            if cont is None:
-                cont = etree.SubElement(self.item, "{%s}content" % ATOM_URL)
-            try:
-                new = etree.fromstring(text)
-            except etree.ParseError:
-                new = etree.fromstring("<div>" + text + "</div>")
-            for i in list(cont):
-                cont.remove(i)
-            cont.append(new)
-        except Exception:
-            pass
+        """ Set the content """
+        self._set_text_("{%s}content" % ATOM_URL, text)
 
     @property
     def link(self):
-        """
-        The link of the news-item
-        """
+        """ The link of the news-item """
         try:
             link = self.item.find("{%s}link" % ATOM_URL)
             return link.attrib["href"]
@@ -289,15 +269,8 @@ class AtomContent(Content):
 
     @property
     def id(self):
-        """
-        The id of the news-item
-        """
-        try:
-            gid = self.item.find("{%s}id" % ATOM_URL)
-            return gid.text
-        except Exception:
-            # This should never happen, handling necessary?
-            return ""
+        """ The id of the news-item """
+        return self._get_text_("{%s}id" % ATOM_URL)
 
 
 class RSSContent(Content):
@@ -307,97 +280,43 @@ class RSSContent(Content):
 
     @property
     def title(self):
-        """
-        The title of the news-item
-        """
-        try:
-            title = self.item.find("title")
-            return title.text.strip()
-        except Exception:
-            return ""
+        """ The title of the news-item """
+        return self._get_text_("title")
 
     @title.setter
-    def title(self, new_title):
-        """
-        Set the title of the news-item
-        """
-        try:
-            title = self.item.find("title")
-            title.text = new_title
-        except Exception:
-            pass
+    def title(self, text):
+        """ Set the title of the news-item """
+        self._set_text_("title", text)
 
     @property
     def description(self):
-        """
-        The description of the news-item
-        """
-        try:
-            desc = self.item.find("description")
-            return desc.text.strip()
-        except Exception:
-            return ""
+        """ The description of the news-item """
+        return self._get_text_("description")
 
     @description.setter
     def description(self, text):
-        """
-        Appends the given text to the description
-        """
-        try:
-            desc = self.item.find("description")
-            if desc is None:
-                desc = etree.SubElement(self.item, "description")
-            desc.text = text
-        except Exception:
-            pass
+        """ Set the description """
+        self._set_text_("description", text)
 
     @property
     def content(self):
-        """
-        The content of the news-item
-        """
-        try:
-            cont = self.item.find("{%s}encoded" % RSS_URL)
-            return cont.text.strip()
-        except Exception:
-            return ""
+        """ The content of the news-item """
+        return self._get_text_("{%s}encoded" % RSS_URL)
 
     @content.setter
     def content(self, text):
-        """
-        Appends the given text to the content
-        """
-        try:
-            cont = self.item.find("{%s}encoded" % RSS_URL)
-            if cont is None:
-                cont = etree.SubElement(self.item, "{%s}encoded" % RSS_URL)
-            cont.text = text
-        except Exception:
-            pass
+        """ Set the content """
+        self._set_text_("{%s}encoded" % RSS_URL, text)
 
     @property
     def link(self):
-        """
-        The link of the news-item
-        """
-        try:
-            link = self.item.find("link")
-            return link.text.strip()
-        except Exception:
-            # This should never happen, handling necessary?
-            return ""
+        """ The link of the news-item """
+        return self._get_text_("link")
 
     @property
     def id(self):
-        """
-        The id of the news-item
-        """
-        try:
-            gid = self.item.find("guid")
-            return gid.text.strip()
-        except Exception:
-            # This should never happen, handling necessary?
-            return ""
+        """ The id of the news-item """
+        return self._get_text_("guid")
 
 
 class Feed(ABC):
