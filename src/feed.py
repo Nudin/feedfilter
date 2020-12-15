@@ -15,7 +15,6 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import re
 import sys
 import xml.etree.ElementTree as etree
 from abc import ABC, abstractmethod
@@ -46,6 +45,8 @@ class Content:
     """
     Represents one item of a feed.
     """
+
+    num_merged_links = 0
 
     def __init__(self, item):
         self.item = item
@@ -153,10 +154,11 @@ class Content:
             tag="li",
         )
 
-        if re.match(r"\[\+\d\]", self.title[-4:]):
-            num = int(self.title[-2]) + 1
-            self.title = self.title[:-4] + "[+%i]" % num
+        if self.num_merged_links > 0:
+            self.num_merged_links += 1
+            self.title = self.title[:-4] + "[+%i]" % self.num_merged_links
         else:
+            self.num_merged_links += 1
             self.title = self.title + " [+1]"
 
     @property

@@ -18,6 +18,8 @@
 #
 import gettext
 import logging
+from collections import Counter
+from typing import Tuple
 
 import comparetext
 import logger
@@ -46,30 +48,27 @@ feed = get_feed(settings.feedfile)
 # For now we use the language without any regional variants
 lang = feed.lang.split("-")[0]
 
-wordlists = {}
 for child in feed:
     # Check for duplicates
-    maxcmplvl = 0
-    wordlist = comparetext.analyse(lang, child.title, child.description, child.content)
-    for index, dic in wordlists.items():
-        t = comparetext.comp(wordlist, dic)
-        maxcmplvl = max(maxcmplvl, t)
-        if t > settings.cmp_threshold:
-            try:
-                child2 = feed.get_child(index)
-                child2.add_crosslink(child.link, child.title)
-                logging.warning(
-                    "removing news entry: %s as duplicate of: %s",
-                    child.title,
-                    child2.title,
-                )
-            except KeyError:
-                pass
-            continue
-    if maxcmplvl > settings.cmp_threshold:
+    max_similarity = 0
+    child.wordlist: Tuple[Counter, float] = comparetext.analyse(
+        lang, child.title, child.description, child.content
+    )
+    for child2 in feed:
+        if child.id == child2.id or not hasattr(child2, "wordlist"):
+            break
+        similarity = comparetext.comp(child.wordlist, child2.wordlist)
+        max_similarity = max(max_similarity, similarity)
+        if similarity > settings.cmp_threshold:
+            child2.add_crosslink(child.link, child.title)
+            logging.warning(
+                "removing news entry: %s as duplicate of: %s",
+                child.title,
+                child2.title,
+            )
+    if max_similarity > settings.cmp_threshold:
         feed.remove_item(child)
         continue
-    wordlists[child.id] = wordlist
 
     # Check against blackwords
     lvl = wordfilter.check(child.title, settings.title_scale)
@@ -80,16 +79,15 @@ for child in feed:
     if lvl > settings.threshold:
         logging.warning("removing item %s with score %i", child.title, lvl)
         feed.remove_item(child)
-        del wordlists[child.id]
     elif settings.appendlvl:
         appendstr = (
             "<br><small><small>lvl: %.2g/%g &nbsp;" % (lvl, settings.threshold)
-            + "maxcmplvl: %.2f</small></small>" % maxcmplvl
+            + "maxcmplvl: %.2f</small></small>" % max_similarity
         )
         child.append_description(appendstr)
         if child.content != "":
             child.append_content(appendstr)
-    logging.info("%.2g %.2f " % (lvl, maxcmplvl) + child.title)
+    logging.info("%.2g %.2f " % (lvl, max_similarity) + child.title)
 
 if settings.outputfile is None:
     # Write output to console
