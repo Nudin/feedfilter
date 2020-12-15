@@ -83,7 +83,7 @@ for child in feed:
         del wordlists[child.id]
     elif settings.appendlvl:
         appendstr = (
-            "<br><small><small>lvl: %.2g &nbsp;" % lvl
+            "<br><small><small>lvl: %.2g/%g &nbsp;" % (lvl, settings.threshold)
             + "maxcmplvl: %.2f</small></small>" % maxcmplvl
         )
         child.append_description(appendstr)
