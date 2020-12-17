@@ -25,7 +25,7 @@ from utils import append_to_html
 
 RSS_URL = "http://purl.org/rss/1.0/modules/content/"
 ATOM_URL = "http://www.w3.org/2005/Atom"
-XML_URL = "https://www.w3.org/XML/1998/namespace"
+XML_URL = "http://www.w3.org/XML/1998/namespace"
 
 
 def get_feed(feed_file):
