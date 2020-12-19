@@ -80,13 +80,7 @@ for child in feed:
         logging.warning("removing item %s with score %i", child.title, lvl)
         feed.remove_item(child)
     elif settings.appendlvl:
-        appendstr = (
-            "<br><small><small>lvl: %.2g/%g &nbsp;" % (lvl, settings.threshold)
-            + "maxcmplvl: %.2f</small></small>" % max_similarity
-        )
-        child.append_description(appendstr)
-        if child.content != "":
-            child.append_content(appendstr)
+        child.set_stats(lvl, settings.threshold, max_similarity)
     logging.info("%.2g %.2f " % (lvl, max_similarity) + child.title)
 
 if settings.outputfile is None:

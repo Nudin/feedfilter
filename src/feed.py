@@ -19,9 +19,8 @@ import sys
 import xml.etree.ElementTree as etree
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-from typing import Iterator
 
-from utils import append_to_html
+from bs4 import BeautifulSoup
 
 RSS_URL = "http://purl.org/rss/1.0/modules/content/"
 ATOM_URL = "http://www.w3.org/2005/Atom"
@@ -30,7 +29,7 @@ XML_URL = "http://www.w3.org/XML/1998/namespace"
 
 def get_feed(feed_file):
     """
-    Determin the format of the feed and parse it
+    Determine the format of the feed and parse it
     """
     tree = etree.parse(feed_file)
     root = tree.getroot()
@@ -41,43 +40,131 @@ def get_feed(feed_file):
     raise NotImplementedError("Unknown feedformat!")
 
 
-class Content:
+class Content(ABC):
+    @abstractmethod
+    def __init__(self, content):
+        pass
+
+    @abstractmethod
+    def append_links(self, links):
+        pass
+
+    @abstractmethod
+    def append_stats(self, lvl, threshold, maxsim):
+        pass
+
+
+class TextContent(Content):
+    def __init__(self, content):
+        super().__init__(content)
+        self.content = content
+
+    def append_links(self, links):
+        if len(links) > 0:
+            self.content += "\n"
+        for item in links:
+            self.content += "\n{}- ".format(item.title)
+
+    def append_stats(self, lvl, threshold, maxsim):
+        self.content += "\n\nlvl: %.2g/%g &nbsp;maxcmplvl: %.2f" % (
+            lvl,
+            threshold,
+            maxsim,
+        )
+
+    def __str__(self):
+        return self.content
+
+
+class HTMLContent(Content):
+    def __init__(self, content):
+        super().__init__(content)
+        self.content = BeautifulSoup(content, "html.parser")
+
+    def append_links(self, links):
+        body = self.content.find("body") or self.content
+        ulist = self.content.new_tag("ul")
+        body.append(ulist)
+        for item in links:
+            link = self.content.new_tag("a")
+            link.atrrs["href"] = item.link
+            link.string = item.title
+            li = self.content.new_tag("li")
+            ulist.append(li)
+            li.append(link)
+
+    def append_stats(self, lvl, threshold, maxsim):
+        body = self.content.find("body") or self.content
+        container = self.content.new_tag("small")
+        container.string = "lvl: %.2g/%g &nbsp;maxcmplvl: %.2f" % (
+            lvl,
+            threshold,
+            maxsim,
+        )
+        body.append(self.content.new_tag("br"))
+        body.append(container)
+
+    def __str__(self):
+        return str(self.content)
+
+
+class FeedItem(ABC):
     """
     Represents one item of a feed.
     """
 
-    num_merged_links = 0
+    merged_items = []
+
+    # The title of the news-item
+    title: str
+    # The description of the news-item
+    description: Content
+    # The content of the news-item
+    content: Content
+    # The link of the news-item
+    link: str
+    # The id of the news-item
+    id: str
+
+    lvl = 0
+    threshold = None
+    maxsim = 0
 
     def __init__(self, item):
-        self.item = item
+        self.data = item
 
-    @property
-    @abstractmethod
-    def title(self):
-        """
-        The title of the news-item
-        """
+    def merge_item(self, item):
+        self.merged_items.append(item)
 
-    @title.setter
-    @abstractmethod
-    def title(self, newtitle):
+    def append_crosslinks(self):
         """
-        Set the title of the news-item
+        Append the given link to the description and content under an heading "see also"
         """
+        if len(self.merged_items) == 0:
+            return
 
-    @property
-    @abstractmethod
-    def description(self):
-        """
-        The description of the news-item
-        """
+        self.description.append_links(self.merged_items)
+        self.content.append_links(self.merged_items)
+        self.title = self.title + "[+%i]" % len(self.merged_items)
 
-    @description.setter
-    @abstractmethod
-    def description(self, text):
-        """
-        Set the description
-        """
+    def sync(self):
+        self.append_crosslinks()
+        self.append_stats()
+
+    def set_stats(self, lvl, threshold, maxsim):
+        self.lvl = lvl
+        self.threshold = threshold
+        self.maxsim = maxsim
+
+    def append_stats(self):
+        self.description.append_stats(self.lvl, self.threshold, self.maxsim)
+        self.content.append_stats(self.lvl, self.threshold, self.maxsim)
+
+
+class XMLFeedItem(FeedItem):
+    """
+    Represents one item of a XML based feed.
+    """
 
     def _find_or_create_(self, tag_name, search_in=None):
         """
@@ -86,7 +173,7 @@ class Content:
         Will search in `search_in` or in self.item is not provided. Finds only
         direct child entities.
         """
-        search_in = search_in or self.item
+        search_in = search_in or self.data
         element = search_in.find(tag_name)
         if element is None:
             element = etree.SubElement(search_in, tag_name)
@@ -97,7 +184,7 @@ class Content:
         Get the text content of an element with given name
         """
         try:
-            element = self.item.find(element_name)
+            element = self.data.find(element_name)
             return element.text.strip()
         except Exception:
             return ""
@@ -112,155 +199,72 @@ class Content:
         except Exception:
             pass
 
-    def append_description(
-        self,
-        text,
-        html=True,
-        tag="p",
-        containertag="div",
-        containername=None,
-    ):
-        """
-        Append the given text to the description
-        """
-        original_content = self.description
-        new_content = self.__append_textorhtml__(
-            original_content,
-            text,
-            html=html,
-            tag=tag,
-            containertag=containertag,
-            containername=containername,
-        )
-        self.description = new_content
 
-    def add_crosslink(self, link, title):
-        """
-        Append the given link to the description and content under an heading "see also"
-        """
-        fulllink = '<a href="' + link + '">' + title + "</a>"
-        self.append_description(
-            fulllink,
-            html=True,
-            containername="crosslink",
-            containertag="ul",
-            tag="li",
-        )
-        self.append_content(
-            fulllink,
-            html=True,
-            containername="crosslink",
-            containertag="ul",
-            tag="li",
-        )
-
-        if self.num_merged_links > 0:
-            self.num_merged_links += 1
-            self.title = self.title[:-4] + "[+%i]" % self.num_merged_links
-        else:
-            self.num_merged_links += 1
-            self.title = self.title + " [+1]"
-
-    @property
-    @abstractmethod
-    def content(self):
-        """
-        The content of the news-item
-        """
-
-    @content.setter
-    @abstractmethod
-    def content(self, text):
-        """
-        Set the content of the news-item
-        """
-
-    @staticmethod
-    def __append_textorhtml__(original_content, text, **kwargs):
-        try:
-            return append_to_html(original_content, text, **kwargs)
-        except Exception as e:
-            new_content = original_content + text
-            return new_content
-
-    def append_content(
-        self,
-        text,
-        html=True,
-        tag="p",
-        containertag="div",
-        containername=None,
-    ):
-        """
-        Append the given text to the content
-        """
-        original_content = self.content
-        new_content = self.__append_textorhtml__(
-            original_content,
-            text,
-            html=html,
-            tag=tag,
-            containertag=containertag,
-            containername=containername,
-        )
-        self.content = new_content
-
-    @property
-    @abstractmethod
-    def link(self):
-        """
-        The link of the news-item
-        """
-
-    @property
-    @abstractmethod
-    def id(self):
-        """
-        The id of the news-item
-        """
-
-
-class AtomContent(Content):
+class AtomFeedItem(XMLFeedItem):
     """
     Implementation of Content for Atom feeds
     """
 
-    @property
-    def title(self):
+    # implementation = {
+    #     "title": "{%s}title" % ATOM_URL,
+    #     "description": "{%s}summary" % ATOM_URL,
+    # }
+
+    def __init__(self, src):
+        super().__init__(src)
+        self.item = src
+        self.parse()
+
+    def parse(self):
+        self.id = self.get_id()
+        self.title = self.get_title()
+        self.link = self.get_link()
+        self.description = self.get_description()
+        self.content = self.get_content()
+
+    def sync(self):
+        super().sync()
+        # self.set_id(self.id)
+        self.set_title(self.title)
+        # self.set_link(self.link)
+        self.set_description(self.description)
+        self.set_content(self.content)
+
+    def get_title(self):
         """ The title of the news-item """
         return self._get_text_("{%s}title" % ATOM_URL)
 
-    @title.setter
-    def title(self, text):
+    def set_title(self, text):
         """ Set the title of the news-item """
         self._set_text_("{%s}title" % ATOM_URL, text)
 
-    @property
-    def description(self):
+    def get_description(self):
         """ The description of the news-item """
-        return self._get_text_("{%s}summary" % ATOM_URL)
+        ctype = self.data.find("{%s}summary" % ATOM_URL).attrib["type"]
+        content = self._get_text_("{%s}summary" % ATOM_URL)
+        if ctype == "html":
+            return HTMLContent(content)
+        else:
+            return TextContent(content)
 
-    @description.setter
-    def description(self, text):
+    def set_description(self, content):
         """ Set the description """
-        self._set_text_("{%s}summary" % ATOM_URL, text)
+        self._set_text_("{%s}summary" % ATOM_URL, str(content))
 
-    @property
-    def content(self):
+    def get_content(self):
         """ The content of the news-item """
-        try:
-            cont = self.item.find("{%s}content" % ATOM_URL)
-            return "".join([etree.tostring(i).decode() for i in list(cont)])
-        except Exception:
-            return ""
+        ctype = self.data.find("{%s}content" % ATOM_URL).attrib["type"]
+        content = self._get_text_("{%s}content" % ATOM_URL)
+        if ctype == "html":
+            return HTMLContent(content)
+        else:
+            return TextContent(content)
 
-    @content.setter
-    def content(self, text):
+    def set_content(self, content):
         """ Set the content """
-        self._set_text_("{%s}content" % ATOM_URL, text)
+        self._set_text_("{%s}content" % ATOM_URL, str(content))
 
-    @property
-    def link(self):
+    def get_link(self):
         """ The link of the news-item """
         try:
             link = self.item.find("{%s}link" % ATOM_URL)
@@ -269,54 +273,64 @@ class AtomContent(Content):
             # This should never happen, handling necessary?
             return ""
 
-    @property
-    def id(self):
+    def get_id(self):
         """ The id of the news-item """
         return self._get_text_("{%s}id" % ATOM_URL)
 
 
-class RSSContent(Content):
+class RSSFeedItem(XMLFeedItem):
     """
     Implementation of Content for RSS feeds
     """
 
-    @property
-    def title(self):
+    def __init__(self, src):
+        super().__init__(src)
+        self.item = src
+        self.parse()
+
+    def parse(self):
+        self.id = self.get_id()
+        self.title = self.get_title()
+        self.link = self.get_link()
+        self.description = self.get_description()
+        self.content = self.get_content()
+
+    def sync(self):
+        # self.set_id(self.id)
+        self.set_title(self.title)
+        # self.set_link(self.link)
+        self.set_description(self.description)
+        self.set_content(self.content)
+
+    def get_title(self):
         """ The title of the news-item """
         return self._get_text_("title")
 
-    @title.setter
-    def title(self, text):
+    def set_title(self, text):
         """ Set the title of the news-item """
         self._set_text_("title", text)
 
-    @property
-    def description(self):
+    def get_description(self):
         """ The description of the news-item """
-        return self._get_text_("description")
+        return HTMLContent(self._get_text_("description"))
 
-    @description.setter
-    def description(self, text):
+    def set_description(self, content):
         """ Set the description """
-        self._set_text_("description", text)
+        self._set_text_("description", str(content))
 
-    @property
-    def content(self):
+    def get_content(self):
         """ The content of the news-item """
-        return self._get_text_("{%s}encoded" % RSS_URL)
+        return HTMLContent(self._get_text_("{%s}encoded" % RSS_URL))
 
-    @content.setter
-    def content(self, text):
+    def set_content(self, content):
         """ Set the content """
-        self._set_text_("{%s}encoded" % RSS_URL, text)
+        self._set_text_("{%s}encoded" % RSS_URL, str(content))
 
-    @property
-    def link(self):
+    def get_link(self):
         """ The link of the news-item """
         return self._get_text_("link")
 
-    @property
-    def id(self):
+    def get_id(self):
         """ The id of the news-item """
         return self._get_text_("guid")
 
@@ -326,18 +340,14 @@ class Feed(ABC):
     Parse and modify an Atom or RSS-Feed
     """
 
-    child_iter: Iterator
-
     @property
     def Content_Type(self):
         raise NotImplementedError
 
-    def __init__(self, tree):
+    def __init__(self):
         """
         Initiate the Feed
         """
-        self.tree = tree
-        self.root = self.tree.getroot()
         self.childen = OrderedDict()
         for rawchild in self._get_children_():
             child = self.Content_Type(rawchild)
@@ -373,11 +383,19 @@ class Feed(ABC):
         Remove an item from the feed
         """
 
+    def sync(self):
+        """
+        Update the data representation
+        """
+        for child in self.childen:
+            child.sync()
+
     @abstractmethod
     def write(self, filename, encoding):
         """
         Write the feed to a file
         """
+        self.sync()
 
     def print(self):
         """
@@ -386,12 +404,22 @@ class Feed(ABC):
         self.write(sys.stdout, encoding="Unicode")
 
 
-class AtomFeed(Feed):
+class XMLFeed(Feed):
+    def __init__(self, tree):
+        """
+        Initiate the Feed
+        """
+        self.tree = tree
+        self.root = self.tree.getroot()
+        super().__init__()
+
+
+class AtomFeed(XMLFeed):
     """
     Parse and modify an Atom Feed
     """
 
-    Content_Type = AtomContent
+    Content_Type = AtomFeedItem
 
     def _get_children_(self):
         return self.root.iterfind("{%s}entry" % ATOM_URL)
@@ -416,16 +444,17 @@ class AtomFeed(Feed):
         """
         Write the feed to a file
         """
+        super().write(filename, encoding)
         etree.register_namespace("", ATOM_URL)
         self.tree.write(filename, encoding=encoding, xml_declaration=True)
 
 
-class RssFeed(Feed):
+class RssFeed(XMLFeed):
     """
     Parse and modify an RSS-Feed
     """
 
-    Content_Type = RSSContent
+    Content_Type = RSSFeedItem
 
     def _get_children_(self):
         return self.root.find("channel").iterfind("item")
@@ -450,4 +479,5 @@ class RssFeed(Feed):
         """
         Write the feed to a file
         """
+        super().write(filename, encoding)
         self.tree.write(filename, encoding=encoding, xml_declaration=True)
