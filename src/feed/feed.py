@@ -10,7 +10,7 @@ class FeedItem(ABC):
     Represents one item of a feed.
     """
 
-    merged_items = []
+    merged_items = None
 
     # The title of the news-item
     title: str
@@ -29,6 +29,7 @@ class FeedItem(ABC):
 
     def __init__(self, item):
         self.data = item
+        self.merged_items = []
 
     def merge_item(self, item):
         self.merged_items.append(item)
@@ -42,7 +43,7 @@ class FeedItem(ABC):
 
         self.description.append_links(self.merged_items)
         self.content.append_links(self.merged_items)
-        self.title = self.title + "[+%i]" % len(self.merged_items)
+        self.title = self.title + " [+%i]" % len(self.merged_items)
 
     def sync(self):
         self.append_crosslinks()
@@ -110,7 +111,7 @@ class Feed(ABC):
         """
         Update the data representation
         """
-        for child in self.childen:
+        for child in self.childen.values():
             child.sync()
 
     @abstractmethod

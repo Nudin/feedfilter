@@ -22,6 +22,7 @@ class RSSFeedItem(XMLFeedItem):
         self.content = self.get_content()
 
     def sync(self):
+        super().sync()
         # self.set_id(self.id)
         self.set_title(self.title)
         # self.set_link(self.link)
@@ -85,6 +86,7 @@ class RssFeed(XMLFeed):
         """
         Remove an item from the feed
         """
+        super().remove_item(child)
         self.root.find("channel").remove(child.item)
 
     def write(self, filename, encoding="UTF-8"):

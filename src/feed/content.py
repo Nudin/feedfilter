@@ -29,7 +29,7 @@ class TextContent(Content):
             self.content += "\n{}- ".format(item.title)
 
     def append_stats(self, lvl, threshold, maxsim):
-        self.content += "\n\nlvl: %.2g/%g &nbsp;maxcmplvl: %.2f" % (
+        self.content += "\n\nlvl: %.2g/%g maxcmplvl: %.2f" % (
             lvl,
             threshold,
             maxsim,
@@ -50,7 +50,7 @@ class HTMLContent(Content):
         body.append(ulist)
         for item in links:
             link = self.content.new_tag("a")
-            link.atrrs["href"] = item.link
+            link.attrs["href"] = item.link
             link.string = item.title
             li = self.content.new_tag("li")
             ulist.append(li)
@@ -59,7 +59,7 @@ class HTMLContent(Content):
     def append_stats(self, lvl, threshold, maxsim):
         body = self.content.find("body") or self.content
         container = self.content.new_tag("small")
-        container.string = "lvl: %.2g/%g &nbsp;maxcmplvl: %.2f" % (
+        container.string = "lvl: %.2g/%g maxcmplvl: %.2f" % (
             lvl,
             threshold,
             maxsim,

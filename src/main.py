@@ -52,7 +52,7 @@ for child in feed:
     # Check for duplicates
     max_similarity = 0
     child.wordlist: Tuple[Counter, float] = comparetext.analyse(
-        lang, child.title, child.description, child.content
+        lang, child.title, str(child.description), str(child.content)
     )
     for child2 in feed:
         if child.id == child2.id or not hasattr(child2, "wordlist"):
@@ -60,7 +60,7 @@ for child in feed:
         similarity = comparetext.comp(child.wordlist, child2.wordlist)
         max_similarity = max(max_similarity, similarity)
         if similarity > settings.cmp_threshold:
-            child2.add_crosslink(child.link, child.title)
+            child2.merge_item(child)
             logging.warning(
                 "removing news entry: %s as duplicate of: %s",
                 child.title,
@@ -73,15 +73,16 @@ for child in feed:
     # Check against blackwords
     lvl = wordfilter.check(child.title, settings.title_scale)
     if child.content:
-        lvl += wordfilter.check(child.content, 1)
+        lvl += wordfilter.check(str(child.content), 1)
     elif child.description:
-        lvl += wordfilter.check(child.description, 1)
+        lvl += wordfilter.check(str(child.description), 1)
     if lvl > settings.threshold:
         logging.warning("removing item %s with score %i", child.title, lvl)
         feed.remove_item(child)
     elif settings.appendlvl:
         child.set_stats(lvl, settings.threshold, max_similarity)
     logging.info("%.2g %.2f " % (lvl, max_similarity) + child.title)
+
 
 if settings.outputfile is None:
     # Write output to console

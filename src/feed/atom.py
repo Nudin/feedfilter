@@ -1,3 +1,5 @@
+import xml.etree.ElementTree as etree
+
 from .content import HTMLContent, TextContent
 from .xml import XMLFeed, XMLFeedItem
 
@@ -45,7 +47,10 @@ class AtomFeedItem(XMLFeedItem):
 
     def get_description(self):
         """ The description of the news-item """
-        ctype = self.data.find("{%s}summary" % ATOM_URL).attrib["type"]
+        element = self.data.find("{%s}summary" % ATOM_URL)
+        if element is None:
+            return TextContent("")
+        ctype = element.attrib.get("type", "text")
         content = self._get_text_("{%s}summary" % ATOM_URL)
         if ctype == "html":
             return HTMLContent(content)
@@ -58,7 +63,10 @@ class AtomFeedItem(XMLFeedItem):
 
     def get_content(self):
         """ The content of the news-item """
-        ctype = self.data.find("{%s}content" % ATOM_URL).attrib["type"]
+        element = self.data.find("{%s}content" % ATOM_URL)
+        if element is None:
+            return TextContent("")
+        ctype = element.attrib.get("type", "text")
         content = self._get_text_("{%s}content" % ATOM_URL)
         if ctype == "html":
             return HTMLContent(content)
@@ -107,6 +115,7 @@ class AtomFeed(XMLFeed):
         """
         Remove an item from the feed
         """
+        super().remove_item(child)
         self.root.remove(child.item)
 
     def write(self, filename, encoding="UTF-8"):
