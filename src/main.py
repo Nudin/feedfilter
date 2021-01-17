@@ -49,6 +49,8 @@ feed = get_feed(settings.feedfile)
 lang = feed.lang.split("-")[0]
 
 for child in feed:
+    if child.deleted:
+        continue
     # Check for duplicates
     max_similarity = 0
     child.wordlist: Tuple[Counter, float] = comparetext.analyse(
@@ -76,11 +78,11 @@ for child in feed:
         lvl += wordfilter.check(str(child.content), 1)
     elif child.description:
         lvl += wordfilter.check(str(child.description), 1)
+    child.set_stats(lvl, settings.threshold, max_similarity)
     if lvl > settings.threshold:
         logging.warning("removing item %s with score %i", child.title, lvl)
         feed.remove_item(child)
-    elif settings.appendlvl:
-        child.set_stats(lvl, settings.threshold, max_similarity)
+    child.append_stats = settings.appendlvl
     logging.info("%.2g %.2f " % (lvl, max_similarity) + child.title)
 
 

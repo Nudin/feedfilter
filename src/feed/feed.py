@@ -23,9 +23,11 @@ class FeedItem(ABC):
     # The id of the news-item
     id: str
 
-    lvl = 0
-    threshold = None
-    maxsim = 0
+    append_stats = False
+    deleted = False
+    lvl = -1
+    threshold = -1
+    maxsim = -1
 
     def __init__(self, item):
         self.data = item
@@ -46,17 +48,19 @@ class FeedItem(ABC):
         self.title = self.title + " [+%i]" % len(self.merged_items)
 
     def sync(self):
-        self.append_crosslinks()
-        self.append_stats()
+        if not self.deleted:
+            self.append_crosslinks()
+            self._append_stats()
 
     def set_stats(self, lvl, threshold, maxsim):
         self.lvl = lvl
         self.threshold = threshold
         self.maxsim = maxsim
 
-    def append_stats(self):
-        self.description.append_stats(self.lvl, self.threshold, self.maxsim)
-        self.content.append_stats(self.lvl, self.threshold, self.maxsim)
+    def _append_stats(self):
+        if self.append_stats:
+            self.description.append_stats(self.lvl, self.threshold, self.maxsim)
+            self.content.append_stats(self.lvl, self.threshold, self.maxsim)
 
 
 class Feed(ABC):
@@ -106,6 +110,7 @@ class Feed(ABC):
         """
         Remove an item from the feed
         """
+        self.childen[child.id].deleted = True
 
     def sync(self):
         """
