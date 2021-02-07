@@ -20,7 +20,6 @@ import math
 import os
 import re
 from collections import Counter
-from gettext import gettext as _
 from typing import Tuple
 
 filedir = os.path.join(
@@ -33,8 +32,7 @@ for lang in os.listdir(filedir):
         filename = os.path.join(filedir, lang)
         common_words[lang] = open(filename, "rU").read().split()
     except Exception:
-        logging.warning(_("Can't load file %s") % common_words[lang])
-        pass
+        logging.warning("Can't load file %s", common_words[lang])
 
 # we remove all special characters from the text before splitting it into words
 specialchar_filter = re.compile("[^\w\s]+", re.UNICODE)
@@ -67,7 +65,7 @@ def analyse(lang, *txt) -> Tuple[Counter, float]:
             except KeyError:
                 continue
     else:
-        logging.warning(_("No commonwords-list available for language %s") % lang)
+        logging.warning("No commonwords-list available for language %s", lang)
 
     norm = math.sqrt(sum(value * value * len(key) for key, value in wordlist.items()))
 

@@ -18,11 +18,10 @@
 #
 import gettext
 import logging
-from gettext import gettext as _
 
 import comparetext
 import logger
-from feed import Feed, get_feed
+from feed import get_feed
 from filter import Filter
 from settings import Settings
 
@@ -60,8 +59,9 @@ for child in feed:
                 child2 = feed.get_child(index)
                 child2.add_crosslink(child.link, child.title)
                 logging.warning(
-                    _("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s")
-                    % {"duplicate": child.title, "news": child2.title}
+                    "removing news entry: %s as duplicate of: %s",
+                    child.title,
+                    child2.title,
                 )
             except KeyError:
                 pass
@@ -78,10 +78,7 @@ for child in feed:
     elif child.description:
         lvl += wordfilter.check(child.description, 1)
     if lvl > settings.threshold:
-        logging.warning(
-            _("removing item %(title)s with score %(score)i")
-            % {"title": child.title, "score": lvl}
-        )
+        logging.warning("removing item %s with score %i", child.title, lvl)
         feed.remove_item(child)
         del wordlists[child.id]
     elif settings.appendlvl:

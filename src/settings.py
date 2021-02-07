@@ -2,7 +2,6 @@ import configparser
 import os
 import sys
 import urllib.request
-from gettext import gettext as _
 
 import utils
 
@@ -25,7 +24,7 @@ class Settings:
     # parse arguments and read feed from file/url
     def read_argv(self):
         if len(sys.argv) != 2:
-            print(_("no file/url given"))
+            print("no file/url given")
             sys.exit(-1)
         self.url = sys.argv[1]
         if self.url[0:4] == "http":

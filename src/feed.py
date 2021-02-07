@@ -19,7 +19,6 @@ import re
 import sys
 import xml.etree.ElementTree as etree
 from abc import ABC, abstractmethod
-from gettext import gettext as _
 from collections import OrderedDict
 from typing import Iterator
 
@@ -40,7 +39,7 @@ def get_feed(feed_file):
         return AtomFeed(tree)
     if root.tag == "rss":
         return RssFeed(tree)
-    raise NotImplementedError(_("Unknown feedformat!"))
+    raise NotImplementedError("Unknown feedformat!")
 
 
 class Content:
