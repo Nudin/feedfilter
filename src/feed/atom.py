@@ -28,6 +28,7 @@ class AtomFeedItem(XMLFeedItem):
         self.link = self.get_link()
         self.description = self.get_description()
         self.content = self.get_content()
+        self.categories = self.get_categories()
 
     def sync(self):
         super().sync()
@@ -78,6 +79,10 @@ class AtomFeedItem(XMLFeedItem):
         """ Set the content """
         if not isinstance(content, NoContent):
             self._set_text_("{%s}content" % ATOM_URL, str(content))
+
+    def get_categories(self):
+        """ The categories of the news-item """
+        return self._get_text_("{%s}category" % ATOM_URL)
 
     def get_link(self):
         """ The link of the news-item """

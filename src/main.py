@@ -74,6 +74,8 @@ for child in feed:
 
     # Check against blackwords
     lvl = wordfilter.check(child.title, settings.title_scale)
+    if child.categories:
+        lvl += wordfilter.check(str(child.categories), 1)
     if child.content:
         lvl += wordfilter.check(str(child.content), 1)
     elif child.description:

@@ -18,6 +18,8 @@ class FeedItem(ABC):
     description: Content
     # The content of the news-item
     content: Content
+    # The categories of the news-item
+    categories: Content
     # The link of the news-item
     link: str
     # The id of the news-item

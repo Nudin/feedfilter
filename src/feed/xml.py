@@ -26,8 +26,9 @@ class XMLFeedItem(FeedItem):
         Get the text content of an element with given name
         """
         try:
-            element = self.data.find(element_name)
-            return element.text.strip()
+            elements = self.data.findall(element_name)
+            texts = [element.text.strip() for element in elements]
+            return " ".join(texts)
         except Exception:
             return ""
 
