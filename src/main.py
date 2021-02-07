@@ -56,12 +56,15 @@ for child in feed:
         t = comparetext.comp(wordlist, dic)
         maxcmplvl = max(maxcmplvl, t)
         if t > settings.cmp_threshold:
-            child2 = feed.get_child(index)
-            child2.add_crosslink(child.link, child.title)
-            logging.warning(
-                _("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s")
-                % {"duplicate": child.title, "news": child2.title}
-            )
+            try:
+                child2 = feed.get_child(index)
+                child2.add_crosslink(child.link, child.title)
+                logging.warning(
+                    _("removing news entry: %(duplicate)s\n\tas duplicate of: %(news)s")
+                    % {"duplicate": child.title, "news": child2.title}
+                )
+            except KeyError:
+                pass
             continue
     if maxcmplvl > settings.cmp_threshold:
         feed.remove_item(child)

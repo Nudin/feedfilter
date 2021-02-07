@@ -20,6 +20,8 @@ import sys
 import xml.etree.ElementTree as etree
 from abc import ABC, abstractmethod
 from gettext import gettext as _
+from collections import OrderedDict
+from typing import Iterator
 
 from utils import append_to_html
 
@@ -404,28 +406,39 @@ class Feed(ABC):
     Parse and modify an Atom or RSS-Feed
     """
 
+    child_iter: Iterator
+
+    @property
+    def Content_Type(self):
+        raise NotImplementedError
+
     def __init__(self, tree):
         """
         Initiate the Feed
         """
         self.tree = tree
         self.root = self.tree.getroot()
+        self.childen = OrderedDict()
+        for rawchild in self._get_children_():
+            child = self.Content_Type(rawchild)
+            self.childen[child.id] = child
 
     def get_child(self, index):
         """
         Gets a child by its id
         """
         assert isinstance(index, str)
-        for child in self:
-            if child.id == index:
-                return child
-        raise KeyError("Child not found.")
+        return self.childen[index]
 
     @abstractmethod
+    def _get_children_(self):
+        """"""
+
     def __iter__(self):
         """
         Get all news-items in the feed
         """
+        return iter(self.childen.values())
 
     @property
     @abstractmethod
@@ -458,11 +471,10 @@ class AtomFeed(Feed):
     Parse and modify an Atom Feed
     """
 
-    def __iter__(self):
-        """
-        Get all news-items in the feed
-        """
-        return iter([AtomContent(i) for i in self.root.findall("{%s}entry" % ATOM_URL)])
+    Content_Type = AtomContent
+
+    def _get_children_(self):
+        return self.root.iterfind("{%s}entry" % ATOM_URL)
 
     @property
     def lang(self):
@@ -493,11 +505,10 @@ class RssFeed(Feed):
     Parse and modify an RSS-Feed
     """
 
-    def __iter__(self):
-        """
-        Get all news-items in the feed
-        """
-        return iter([RSSContent(i) for i in self.root.find("channel").findall("item")])
+    Content_Type = RSSContent
+
+    def _get_children_(self):
+        return self.root.find("channel").iterfind("item")
 
     @property
     def lang(self):
