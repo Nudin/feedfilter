@@ -69,3 +69,17 @@ class HTMLContent(Content):
 
     def __str__(self):
         return str(self.content)
+
+
+class NoContent(Content):
+    def __init__(self, content=None):
+        super().__init__(content)
+
+    def append_links(self, links):
+        pass
+
+    def append_stats(self, lvl, threshold, maxsim):
+        pass
+
+    def __str__(self):
+        return ""

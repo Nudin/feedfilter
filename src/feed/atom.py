@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as etree
 
-from .content import HTMLContent, TextContent
+from .content import HTMLContent, NoContent, TextContent
 from .xml import XMLFeed, XMLFeedItem
 
 ATOM_URL = "http://www.w3.org/2005/Atom"
@@ -49,7 +49,7 @@ class AtomFeedItem(XMLFeedItem):
         """ The description of the news-item """
         element = self.data.find("{%s}summary" % ATOM_URL)
         if element is None:
-            return TextContent("")
+            return NoContent()
         ctype = element.attrib.get("type", "text")
         content = self._get_text_("{%s}summary" % ATOM_URL)
         if ctype == "html":
@@ -59,13 +59,14 @@ class AtomFeedItem(XMLFeedItem):
 
     def set_description(self, content):
         """ Set the description """
-        self._set_text_("{%s}summary" % ATOM_URL, str(content))
+        if not isinstance(content, NoContent):
+            self._set_text_("{%s}summary" % ATOM_URL, str(content))
 
     def get_content(self):
         """ The content of the news-item """
         element = self.data.find("{%s}content" % ATOM_URL)
         if element is None:
-            return TextContent("")
+            return NoContent()
         ctype = element.attrib.get("type", "text")
         content = self._get_text_("{%s}content" % ATOM_URL)
         if ctype == "html":
@@ -75,7 +76,8 @@ class AtomFeedItem(XMLFeedItem):
 
     def set_content(self, content):
         """ Set the content """
-        self._set_text_("{%s}content" % ATOM_URL, str(content))
+        if not isinstance(content, NoContent):
+            self._set_text_("{%s}content" % ATOM_URL, str(content))
 
     def get_link(self):
         """ The link of the news-item """
