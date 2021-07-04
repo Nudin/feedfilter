@@ -71,3 +71,6 @@ class Tagesschau(Plugin):
             item.title += " [Video]"
         if "audio" in av_types:
             item.title += " [Audio]"
+
+
+PLUGIN_CLASS = Tagesschau
