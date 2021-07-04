@@ -25,6 +25,7 @@ import comparetext
 import logger
 from feed import get_feed
 from filter import Filter
+from plugins.tagesschau import Tagesschau
 from settings import Settings
 
 # setup gettext
@@ -47,6 +48,11 @@ wordfilter.read_filterlist(settings.sitename)
 feed = get_feed(settings.feedfile)
 # For now we use the language without any regional variants
 lang = feed.lang.split("-")[0]
+
+
+plugins = []
+plugins.append(Tagesschau(settings.url))
+
 
 for child in feed:
     if child.deleted:
@@ -86,6 +92,12 @@ for child in feed:
         feed.remove_item(child)
     child.append_stats = settings.appendlvl
     logging.info("%.2g %.2f " % (lvl, max_similarity) + child.title)
+
+    for plugin in plugins:
+        plugin.apply_on_item(child)
+
+for plugin in plugins:
+    plugin.apply_on_feed(feed)
 
 
 if settings.outputfile is None:
