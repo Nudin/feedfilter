@@ -9,6 +9,10 @@ class Content(ABC):
         pass
 
     @abstractmethod
+    def append_text(self, text):
+        pass
+
+    @abstractmethod
     def append_links(self, links):
         pass
 
@@ -21,6 +25,9 @@ class TextContent(Content):
     def __init__(self, content):
         super().__init__(content)
         self.content = content
+
+    def append_text(self, text):
+        self.content += "\n{}".format(text)
 
     def append_links(self, links):
         if len(links) > 0:
@@ -43,6 +50,12 @@ class HTMLContent(Content):
     def __init__(self, content):
         super().__init__(content)
         self.content = BeautifulSoup(content, "html.parser")
+
+    def append_text(self, text):
+        body = self.content.find("body") or self.content
+        p = self.content.new_tag("p")
+        p.append(text)
+        body.append(p)
 
     def append_links(self, links):
         body = self.content.find("body") or self.content
@@ -74,6 +87,9 @@ class HTMLContent(Content):
 class NoContent(Content):
     def __init__(self, content=None):
         super().__init__(content)
+
+    def append_text(self, text):
+        pass
 
     def append_links(self, links):
         pass
