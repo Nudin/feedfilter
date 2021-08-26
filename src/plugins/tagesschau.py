@@ -34,13 +34,15 @@ class Tagesschau(Plugin):
     def __extrace_multimedia_links(cls, metadata):
         av_links = []
         av_types = set()
+        if "copytext" not in metadata:
+            return ([], [])
         for paragraph in metadata["copytext"]:
             boxes = paragraph.get("paragraphBoxes")
             if boxes:
                 for box in boxes:
                     # box_type = box["boxtype"]
                     for content in box["boxcontent"]:
-                        content_type = content["type"]
+                        content_type = content.get("type")
                         if content_type == "video":
                             media_url = content["mediadata"][2]["h264l"]
                             headline = "Video: " + content["headline"]

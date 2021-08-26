@@ -18,6 +18,7 @@
 #
 import gettext
 import logging
+import sys
 from collections import Counter
 from typing import Tuple
 
@@ -32,9 +33,11 @@ from settings import Settings
 gettext.textdomain("feedfilter")
 
 # parse commandline arguments and settingsfile
+if len(sys.argv) != 2:
+    print("no feed given")
+    sys.exit(-1)
 settings = Settings()
 settings.read_argv()
-settings.read_settings()
 
 # Start Logger
 logger.setupLogger(settings)
